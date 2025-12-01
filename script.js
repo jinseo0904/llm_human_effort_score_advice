@@ -36,31 +36,38 @@ clearBtn.addEventListener('click', function() {
     }
 });
 
-// Test Ollama API connection
+// Test Ollama API with gemma3:27b model
 testApiBtn.addEventListener('click', async function() {
     testApiBtn.disabled = true;
-    addMessage('system', '🔍 Testing Ollama API connection...');
+    addMessage('system', '🤖 Connecting to Ollama with gemma3:27b...');
     
     try {
         // Determine the URL based on whether we're using the proxy or direct connection
         const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const url = isLocalhost 
-            ? `${OLLAMA_API_URL}/api/tags`
-            : `${OLLAMA_API_URL}?endpoint=/api/tags`;
+            ? `${OLLAMA_API_URL}/api/generate`
+            : `${OLLAMA_API_URL}?endpoint=/api/generate`;
+        
+        const requestBody = {
+            model: 'gemma3:27b',
+            prompt: 'Please introduce yourself briefly in 2-3 sentences.',
+            stream: false
+        };
         
         const response = await fetch(url, {
-            method: 'GET',
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
+            body: JSON.stringify(requestBody)
         });
         
         if (response.ok) {
             const data = await response.json();
-            const modelCount = data.models ? data.models.length : 0;
-            const modelNames = data.models ? data.models.map(m => m.name).join(', ') : 'none';
+            const modelResponse = data.response || 'No response received';
             
-            addMessage('system', `✅ API Connection Successful!\n\nFound ${modelCount} model(s): ${modelNames}\n\nFull response:\n${JSON.stringify(data, null, 2)}`);
+            addMessage('assistant', modelResponse);
+            addMessage('system', `✅ Model: ${data.model || 'gemma3:27b'}\n⏱️ Generation time: ${data.total_duration ? (data.total_duration / 1e9).toFixed(2) + 's' : 'N/A'}\n📊 Tokens: ${data.eval_count || 'N/A'}`);
         } else {
             // Try to get error details from response
             let errorDetails = `Status: ${response.status} ${response.statusText}`;
@@ -68,18 +75,15 @@ testApiBtn.addEventListener('click', async function() {
                 const errorData = await response.json();
                 if (errorData.error || errorData.message) {
                     errorDetails += `\n\nError: ${errorData.error || errorData.message}`;
-                    if (errorData.message) {
-                        errorDetails += `\nDetails: ${errorData.message}`;
-                    }
                 }
             } catch (e) {
                 // Response wasn't JSON, that's okay
             }
             
-            addMessage('system', `❌ API Connection Failed\n\n${errorDetails}\n\nPossible issues:\n- Ollama server not accessible from Vercel\n- Network/firewall blocking\n- Check Vercel function logs`);
+            addMessage('system', `❌ API Connection Failed\n\n${errorDetails}\n\nPossible issues:\n- Model not available on server\n- Check if model is pulled: ollama pull gemma3:27b`);
         }
     } catch (error) {
-        addMessage('system', `❌ API Connection Failed\n\nError: ${error.message}\n\nPossible issues:\n- Network connectivity\n- API server not accessible\n- Check browser console for details`);
+        addMessage('system', `❌ API Connection Failed\n\nError: ${error.message}\n\nCheck browser console for details`);
     } finally {
         testApiBtn.disabled = false;
     }
