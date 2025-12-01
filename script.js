@@ -6,7 +6,10 @@ const clearBtn = document.getElementById('clearBtn');
 const testApiBtn = document.getElementById('testApiBtn');
 
 // Ollama API configuration
-const OLLAMA_API_URL = 'http://129.10.112.25:11434';
+// Use relative path for Vercel deployment, or localhost for local development
+const OLLAMA_API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://129.10.112.25:11434'  // Direct access when testing locally
+    : '/api/ollama';  // Use Vercel serverless function when deployed
 
 // Auto-resize textarea
 messageInput.addEventListener('input', function() {
@@ -39,7 +42,13 @@ testApiBtn.addEventListener('click', async function() {
     addMessage('system', '🔍 Testing Ollama API connection...');
     
     try {
-        const response = await fetch(`${OLLAMA_API_URL}/api/tags`, {
+        // Determine the URL based on whether we're using the proxy or direct connection
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const url = isLocalhost 
+            ? `${OLLAMA_API_URL}/api/tags`
+            : `${OLLAMA_API_URL}?endpoint=/api/tags`;
+        
+        const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

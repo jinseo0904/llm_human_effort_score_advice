@@ -1,0 +1,14 @@
+{
+  "name": "llm-transparency-chat",
+  "version": "1.0.0",
+  "description": "Simple static chat interface with Ollama API integration",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel"
+  },
+  "keywords": ["chat", "ollama", "vercel"],
+  "author": "",
+  "license": "MIT"
+}
+
