@@ -14,30 +14,47 @@ export default async function handler(req, res) {
         return;
     }
 
-    const OLLAMA_API_URL = 'http://129.10.112.25:11434';
+    const OLLAMA_API_URL = 'https://overnervous-ximena-torchy.ngrok-free.dev';
     
     try {
         // Get the endpoint from query parameter (e.g., /api/ollama?endpoint=/api/tags)
         const endpoint = req.query.endpoint || '/api/tags';
         const url = `${OLLAMA_API_URL}${endpoint}`;
         
-        // Forward the request to Ollama API
-        const response = await fetch(url, {
+        console.log('Proxying request to:', url);
+        
+        // Build fetch options
+        const fetchOptions = {
             method: req.method,
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: req.method !== 'GET' ? JSON.stringify(req.body) : undefined,
-        });
+        };
+        
+        // Only add body for non-GET requests
+        if (req.method !== 'GET' && req.method !== 'HEAD') {
+            fetchOptions.body = JSON.stringify(req.body);
+        }
+        
+        // Forward the request to Ollama API
+        const response = await fetch(url, fetchOptions);
+        
+        console.log('Ollama API response status:', response.status);
+        
+        // Check if response is ok
+        if (!response.ok) {
+            throw new Error(`Ollama API returned status ${response.status}`);
+        }
         
         const data = await response.json();
         
-        res.status(response.status).json(data);
+        res.status(200).json(data);
     } catch (error) {
         console.error('Proxy error:', error);
         res.status(500).json({ 
             error: 'Failed to connect to Ollama API',
-            message: error.message 
+            message: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 }

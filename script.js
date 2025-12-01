@@ -8,7 +8,7 @@ const testApiBtn = document.getElementById('testApiBtn');
 // Ollama API configuration
 // Use relative path for Vercel deployment, or localhost for local development
 const OLLAMA_API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://129.10.112.25:11434'  // Direct access when testing locally
+    ? 'https://overnervous-ximena-torchy.ngrok-free.dev'  // ngrok public URL
     : '/api/ollama';  // Use Vercel serverless function when deployed
 
 // Auto-resize textarea
@@ -62,10 +62,24 @@ testApiBtn.addEventListener('click', async function() {
             
             addMessage('system', `✅ API Connection Successful!\n\nFound ${modelCount} model(s): ${modelNames}\n\nFull response:\n${JSON.stringify(data, null, 2)}`);
         } else {
-            addMessage('system', `❌ API Connection Failed\n\nStatus: ${response.status} ${response.statusText}\n\nThe API endpoint returned an error.`);
+            // Try to get error details from response
+            let errorDetails = `Status: ${response.status} ${response.statusText}`;
+            try {
+                const errorData = await response.json();
+                if (errorData.error || errorData.message) {
+                    errorDetails += `\n\nError: ${errorData.error || errorData.message}`;
+                    if (errorData.message) {
+                        errorDetails += `\nDetails: ${errorData.message}`;
+                    }
+                }
+            } catch (e) {
+                // Response wasn't JSON, that's okay
+            }
+            
+            addMessage('system', `❌ API Connection Failed\n\n${errorDetails}\n\nPossible issues:\n- Ollama server not accessible from Vercel\n- Network/firewall blocking\n- Check Vercel function logs`);
         }
     } catch (error) {
-        addMessage('system', `❌ API Connection Failed\n\nError: ${error.message}\n\nPossible issues:\n- CORS policy blocking the request\n- Network connectivity\n- API server not accessible from browser\n\nNote: The API might work with curl but be blocked by browser CORS policies.`);
+        addMessage('system', `❌ API Connection Failed\n\nError: ${error.message}\n\nPossible issues:\n- Network connectivity\n- API server not accessible\n- Check browser console for details`);
     } finally {
         testApiBtn.disabled = false;
     }
