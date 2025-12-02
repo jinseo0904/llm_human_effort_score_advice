@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survey Questions - Advice Response Interface</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="screen active">
+        <div class="screen-container">
+            <div class="screen-content survey-content">
+                <h1>Survey Questions</h1>
+                <p class="survey-instructions">Please rate how much you agree or disagree with each statement. Use a scale from 1 (Extremely Disagree) to 5 (Extremely Agree).</p>
+                <form id="survey1Form">
+                    <div class="form-section">
+                        <div class="form-group">
+                            <label class="survey-item-label">I felt heard and understood by the author of this advice</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="heard_understood" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="heard_understood" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="heard_understood" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="heard_understood" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="heard_understood" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">I felt the author put my best interests first when drafting this advice</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="best_interests" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="best_interests" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="best_interests" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="best_interests" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="best_interests" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">I felt the author saw me as a person, not just someone who needs help.</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="saw_as_person" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="saw_as_person" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="saw_as_person" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="saw_as_person" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="saw_as_person" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">I felt the author understood what is important to me in my life.</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="understood_important" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="understood_important" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="understood_important" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="understood_important" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="understood_important" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="primary-btn">Next</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const survey1Form = document.getElementById('survey1Form');
+        
+        // Check if user came from main page
+        if (!localStorage.getItem('pendingSubmissionData')) {
+            window.location.href = 'index.html';
+        }
+        
+        survey1Form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collect survey 1 data
+            const formData = new FormData(survey1Form);
+            const survey1Data = {
+                heard_understood: formData.get('heard_understood'),
+                best_interests: formData.get('best_interests'),
+                saw_as_person: formData.get('saw_as_person'),
+                understood_important: formData.get('understood_important')
+            };
+            
+            // Store in localStorage
+            let surveyData = JSON.parse(localStorage.getItem('surveyData') || '{}');
+            surveyData.survey1 = survey1Data;
+            localStorage.setItem('surveyData', JSON.stringify(surveyData));
+            
+            // Navigate to survey 2
+            window.location.href = 'survey2.html';
+        });
+    </script>
+</body>
+</html>

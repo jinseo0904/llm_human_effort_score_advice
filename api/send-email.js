@@ -53,7 +53,8 @@ export default async function handler(req, res) {
 
         // Format the email content
         const timestamp = new Date(submissionData.timestamp).toLocaleString();
-        const emailSubject = `Advice Response Submission - ${timestamp}`;
+        const userID = submissionData.userID || 'N/A';
+        const emailSubject = `Advice Response Submission - ${userID} - ${timestamp}`;
         
         // Create HTML email body
         const emailHtml = `<!DOCTYPE html>
@@ -77,9 +78,44 @@ export default async function handler(req, res) {
     <div class="container">
         <div class="header">
             <h1>Advice Response Submission</h1>
+            <p>User ID: ${userID}</p>
             <p>Timestamp: ${timestamp}</p>
+            ${submissionData.isTestMode ? '<p style="background: #fff3cd; padding: 8px; border-radius: 4px; margin-top: 10px;"><strong>⚠️ Test Mode</strong></p>' : ''}
         </div>
         <div class="content">
+            ${submissionData.surveyData ? `
+            <div class="section">
+                <div class="section-title">👤 Demographic Data</div>
+                <div class="metric"><span class="metric-label">Age Group:</span><span class="metric-value">${submissionData.surveyData.demographics?.ageGroup || 'N/A'}</span></div>
+                <div class="metric"><span class="metric-label">Gender:</span><span class="metric-value">${submissionData.surveyData.demographics?.gender || 'N/A'}</span></div>
+            </div>
+            ${submissionData.surveyData.survey1 ? `
+            <div class="section">
+                <div class="section-title">📊 Survey 1 - Heard & Understood</div>
+                <div class="metric"><span class="metric-label">Heard and understood:</span><span class="metric-value">${submissionData.surveyData.survey1.heard_understood || 'N/A'}/5</span></div>
+                <div class="metric"><span class="metric-label">Best interests first:</span><span class="metric-value">${submissionData.surveyData.survey1.best_interests || 'N/A'}/5</span></div>
+                <div class="metric"><span class="metric-label">Saw as person:</span><span class="metric-value">${submissionData.surveyData.survey1.saw_as_person || 'N/A'}/5</span></div>
+                <div class="metric"><span class="metric-label">Understood important:</span><span class="metric-value">${submissionData.surveyData.survey1.understood_important || 'N/A'}/5</span></div>
+            </div>
+            ` : ''}
+            ${submissionData.surveyData.survey2 ? `
+            <div class="section">
+                <div class="section-title">📊 Survey 2 - Trust in Automation System (TIAS)</div>
+                <div class="metric"><span class="metric-label">Deceptive:</span><span class="metric-value">${submissionData.surveyData.survey2.deceptive || 'N/A'}/5</span></div>
+                <div class="metric"><span class="metric-label">Underhanded:</span><span class="metric-value">${submissionData.surveyData.survey2.underhanded || 'N/A'}/5</span></div>
+                <div class="metric"><span class="metric-label">Suspicious:</span><span class="metric-value">${submissionData.surveyData.survey2.suspicious || 'N/A'}/5</span></div>
+                <div class="metric"><span class="metric-label">Wary:</span><span class="metric-value">${submissionData.surveyData.survey2.wary || 'N/A'}/5</span></div>
+                <div class="metric"><span class="metric-label">Harmful:</span><span class="metric-value">${submissionData.surveyData.survey2.harmful || 'N/A'}/5</span></div>
+                <div class="metric"><span class="metric-label">Confident:</span><span class="metric-value">${submissionData.surveyData.survey2.confident || 'N/A'}/5</span></div>
+                <div class="metric"><span class="metric-label">Security:</span><span class="metric-value">${submissionData.surveyData.survey2.security || 'N/A'}/5</span></div>
+                <div class="metric"><span class="metric-label">Integrity:</span><span class="metric-value">${submissionData.surveyData.survey2.integrity || 'N/A'}/5</span></div>
+                <div class="metric"><span class="metric-label">Dependable:</span><span class="metric-value">${submissionData.surveyData.survey2.dependable || 'N/A'}/5</span></div>
+                <div class="metric"><span class="metric-label">Reliable:</span><span class="metric-value">${submissionData.surveyData.survey2.reliable || 'N/A'}/5</span></div>
+                <div class="metric"><span class="metric-label">Trust:</span><span class="metric-value">${submissionData.surveyData.survey2.trust || 'N/A'}/5</span></div>
+                <div class="metric"><span class="metric-label">Familiar:</span><span class="metric-value">${submissionData.surveyData.survey2.familiar || 'N/A'}/5</span></div>
+            </div>
+            ` : ''}
+            ` : ''}
             <div class="section">
                 <div class="section-title">📊 Human Effort Score</div>
                 <div class="metric"><span class="metric-label">Calculated HES:</span><span class="metric-value">${submissionData.humanEffortScore.calculated}</span></div>
@@ -124,7 +160,36 @@ export default async function handler(req, res) {
         // Create plain text version
         const emailText = `Advice Response Submission
 
+User ID: ${userID}
 Timestamp: ${timestamp}
+${submissionData.isTestMode ? '\n⚠️ Test Mode' : ''}
+
+${submissionData.surveyData ? `
+Demographic Data:
+- Age Group: ${submissionData.surveyData.demographics?.ageGroup || 'N/A'}
+- Gender: ${submissionData.surveyData.demographics?.gender || 'N/A'}
+
+${submissionData.surveyData.survey1 ? `Survey 1 - Heard & Understood:
+- Heard and understood: ${submissionData.surveyData.survey1.heard_understood || 'N/A'}/5
+- Best interests first: ${submissionData.surveyData.survey1.best_interests || 'N/A'}/5
+- Saw as person: ${submissionData.surveyData.survey1.saw_as_person || 'N/A'}/5
+- Understood important: ${submissionData.surveyData.survey1.understood_important || 'N/A'}/5
+
+` : ''}${submissionData.surveyData.survey2 ? `Survey 2 - Trust in Automation System:
+- Deceptive: ${submissionData.surveyData.survey2.deceptive || 'N/A'}/5
+- Underhanded: ${submissionData.surveyData.survey2.underhanded || 'N/A'}/5
+- Suspicious: ${submissionData.surveyData.survey2.suspicious || 'N/A'}/5
+- Wary: ${submissionData.surveyData.survey2.wary || 'N/A'}/5
+- Harmful: ${submissionData.surveyData.survey2.harmful || 'N/A'}/5
+- Confident: ${submissionData.surveyData.survey2.confident || 'N/A'}/5
+- Security: ${submissionData.surveyData.survey2.security || 'N/A'}/5
+- Integrity: ${submissionData.surveyData.survey2.integrity || 'N/A'}/5
+- Dependable: ${submissionData.surveyData.survey2.dependable || 'N/A'}/5
+- Reliable: ${submissionData.surveyData.survey2.reliable || 'N/A'}/5
+- Trust: ${submissionData.surveyData.survey2.trust || 'N/A'}/5
+- Familiar: ${submissionData.surveyData.survey2.familiar || 'N/A'}/5
+
+` : ''}` : ''}
 
 Human Effort Score: ${submissionData.humanEffortScore.calculated}
 Time on Page: ${submissionData.metrics.timeOnPage.formatted}

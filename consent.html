@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consent Form - Advice Response Interface</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="screen active">
+        <div class="screen-container">
+            <div class="screen-content consent-content">
+                <h1>Consent Form</h1>
+                <div class="consent-text">
+                    <p><strong>Research Study Information</strong></p>
+                    <p>You are being invited to participate in a research study. Please read this form carefully and ask any questions you may have before agreeing to participate.</p>
+                    
+                    <p><strong>Purpose of the Study:</strong></p>
+                    <p>The purpose of this study is to understand how people write advice responses with the assistance of AI tools.</p>
+                    
+                    <p><strong>What You Will Be Asked To Do:</strong></p>
+                    <p>You will be asked to write an advice response to a given situation. You may use AI assistance tools if you wish. We will track your interactions and effort metrics during this process.</p>
+                    
+                    <p><strong>Risks and Benefits:</strong></p>
+                    <p>There are minimal risks associated with this study. The benefits include contributing to research on human-AI collaboration.</p>
+                    
+                    <p><strong>Confidentiality:</strong></p>
+                    <p>Your responses will be kept confidential. Your User ID will be used to link your responses but will not be shared publicly.</p>
+                    
+                    <p><strong>Voluntary Participation:</strong></p>
+                    <p>Your participation in this study is completely voluntary. You may withdraw at any time without penalty.</p>
+                    
+                    <p><strong>Questions:</strong></p>
+                    <p>If you have any questions about this study, please contact the research team.</p>
+                </div>
+                <div class="button-group">
+                    <button id="agreeBtn" class="primary-btn">I Agree</button>
+                    <button id="disagreeBtn" class="secondary-btn">I Do Not Agree</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const agreeBtn = document.getElementById('agreeBtn');
+        const disagreeBtn = document.getElementById('disagreeBtn');
+        
+        // Check if userID exists
+        if (!localStorage.getItem('userID')) {
+            window.location.href = 'index.html';
+        }
+        
+        agreeBtn.addEventListener('click', function() {
+            window.location.href = 'main.html';
+        });
+        
+        disagreeBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you do not agree? You will be returned to the User ID entry screen.')) {
+                localStorage.removeItem('userID');
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>

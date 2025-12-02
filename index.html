@@ -3,183 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advice Response Interface</title>
+    <title>Welcome - Advice Response Interface</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <div class="main-layout">
-            <!-- Left Pane -->
-            <div class="left-pane">
-                <!-- Top Half: Advice Post Display -->
-                <div class="advice-post-section">
-                    <div class="section-header">
-                        <h2>Situation</h2>
-                    </div>
-                    <div id="advicePost" class="advice-post-content">
-                        <p class="loading-text">Loading advice post...</p>
-                    </div>
-                </div>
-                
-                <!-- Bottom Half: Comment Input -->
-                <div class="comment-section">
-                    <div class="section-header">
-                        <h2>Your Response</h2>
-                    </div>
-                    <div class="comment-input-container">
-                        <div class="word-count-container">
-                            <span id="wordCount" class="word-count">0 words</span>
-                        </div>
-                        <textarea 
-                            id="commentInput" 
-                            class="comment-input" 
-                            placeholder="Type your response here..."
-                            rows="8"
-                        ></textarea>
-                        <div class="comment-buttons">
-                            <button id="askAiFeedbackBtn" class="ask-ai-feedback-btn">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                                    <line x1="9" y1="10" x2="15" y2="10"></line>
-                                    <line x1="12" y1="7" x2="12" y2="13"></line>
-                                </svg>
-                                <span>Ask AI Feedback</span>
-                            </button>
-                            <button id="commentSubmitBtn" class="comment-submit-btn">
-                                <span>Submit</span>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Middle Pane: AI Chat -->
-            <div class="middle-pane">
-                <div class="chat-container">
-                    <div class="chat-header">
-                        <h1>AI Chat</h1>
-                        <div class="header-buttons">
-                            <button id="testApiBtn" class="header-btn" title="Test Ollama API with gemma3:27b">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                                </svg>
-                                <span>Test Model</span>
-                            </button>
-                            <button id="clearBtn" class="clear-btn" title="Clear chat">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div id="chatMessages" class="chat-messages">
-                    </div>
-                    
-                    <div class="chat-input-container">
-                        <textarea 
-                            id="messageInput" 
-                            class="chat-input" 
-                            placeholder="Ask for help crafting your advice response..."
-                            rows="1"
-                        ></textarea>
-                        <button id="sendBtn" class="send-btn">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="22" y1="2" x2="11" y2="13"></line>
-                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Right Pane: Human Effort Score -->
-            <div class="score-pane">
-                <div class="score-container">
-                    <div class="section-header">
-                        <h2>Human Effort Score</h2>
-                    </div>
-                    <div class="score-content">
-                        <div class="score-section">
-                            <h3>Scrolling</h3>
-                            <div class="score-item">
-                                <span class="score-label">Situation Box:</span>
-                                <span id="situationScrollCount" class="score-value">0</span>
-                            </div>
-                            <div class="score-item">
-                                <span class="score-label">AI Chat Box:</span>
-                                <span id="chatScrollCount" class="score-value">0</span>
-                            </div>
-                        </div>
-                        
-                        <div class="score-section">
-                            <h3>Typing</h3>
-                            <div class="score-item">
-                                <span class="score-label">Response Input:</span>
-                                <span id="responseTypingCount" class="score-value">0</span>
-                            </div>
-                            <div class="score-item">
-                                <span class="score-label">AI Chat Input:</span>
-                                <span id="chatTypingCount" class="score-value">0</span>
-                            </div>
-                        </div>
-                        
-                        <div class="score-section">
-                            <h3>AI Interactions</h3>
-                            <div class="score-item">
-                                <span class="score-label">AI Prompts Sent:</span>
-                                <span id="aiPromptCount" class="score-value">0</span>
-                            </div>
-                            <div class="score-item">
-                                <span class="score-label">AI Feedback Requests:</span>
-                                <span id="aiFeedbackCount" class="score-value">0</span>
-                            </div>
-                        </div>
-                        
-                        <div class="score-section">
-                            <h3>Draft Similarity</h3>
-                            <div class="score-item">
-                                <span class="score-label">Similarity to AI Text:</span>
-                                <span id="draftSimilarity" class="score-value">0%</span>
-                            </div>
-                        </div>
-                        
-                        <div class="score-section">
-                            <h3>Time</h3>
-                            <div class="score-item">
-                                <span class="score-label">Time on Page:</span>
-                                <span id="timeOnPage" class="score-value">0:00</span>
-                            </div>
-                        </div>
-                        
-                        <div class="score-section">
-                            <h3>Human Effort Score</h3>
-                            <div class="score-item total-score">
-                                <span class="score-label">HES:</span>
-                                <span id="hesScore" class="score-value">0</span>
-                            </div>
-                        </div>
-                        
-                        <div class="score-section">
-                            <h3>Total</h3>
-                            <div class="score-item">
-                                <span class="score-label">Total Interactions:</span>
-                                <span id="totalCount" class="score-value">0</span>
-                            </div>
-                        </div>
+    <div class="screen active">
+        <div class="screen-container">
+            <div class="screen-content">
+                <h1>Welcome</h1>
+                <p class="screen-description">Please enter your User ID to continue, or click "Test" to proceed directly.</p>
+                <div class="input-group">
+                    <input type="text" id="userIDInput" class="text-input" placeholder="Enter your User ID" autocomplete="off">
+                    <div class="button-group">
+                        <button id="continueBtn" class="primary-btn">Continue</button>
+                        <button id="testBtn" class="secondary-btn">Test</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <script src="script.js"></script>
+    <script>
+        const userIDInput = document.getElementById('userIDInput');
+        const continueBtn = document.getElementById('continueBtn');
+        const testBtn = document.getElementById('testBtn');
+        
+        continueBtn.addEventListener('click', function() {
+            const enteredUserID = userIDInput.value.trim();
+            if (!enteredUserID) {
+                alert('Please enter a User ID or click "Test" to proceed.');
+                return;
+            }
+            localStorage.setItem('userID', enteredUserID);
+            localStorage.setItem('isTestMode', 'false');
+            window.location.href = 'consent.html';
+        });
+        
+        testBtn.addEventListener('click', function() {
+            localStorage.setItem('userID', 'test-user');
+            localStorage.setItem('isTestMode', 'true');
+            window.location.href = 'main.html';
+        });
+        
+        userIDInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                continueBtn.click();
+            }
+        });
+        
+        // Focus on input when page loads
+        window.addEventListener('load', () => {
+            userIDInput.focus();
+        });
+    </script>
 </body>
 </html>
-

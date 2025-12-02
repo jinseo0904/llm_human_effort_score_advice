@@ -1,4 +1,14 @@
-// Get DOM elements
+// Screen management
+let currentScreen = 'userid';
+let userID = null;
+let isTestMode = false;
+
+// Get DOM elements - will be initialized when DOM is ready
+let useridScreen, consentScreen, mainScreen, survey1Screen, survey2Screen, demographicsScreen;
+let userIDInput, continueBtn, testBtn, agreeBtn, disagreeBtn;
+let survey1Form, survey2Form, demographicsForm;
+let nextSurvey1Btn, nextSurvey2Btn, submitDemographicsBtn;
+
 const chatMessages = document.getElementById('chatMessages');
 const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
@@ -1257,7 +1267,129 @@ async function emailSubmission(jsonData) {
     }
 }
 
-// Handle comment submit
+// Screen navigation functions
+function showScreen(screenName) {
+    // Make sure elements are initialized
+    if (!useridScreen) {
+        initializeDOMElements();
+    }
+    
+    // Hide all screens (with null checks)
+    if (useridScreen) useridScreen.classList.remove('active');
+    if (consentScreen) consentScreen.classList.remove('active');
+    if (mainScreen) mainScreen.classList.remove('active');
+    if (survey1Screen) survey1Screen.classList.remove('active');
+    if (survey2Screen) survey2Screen.classList.remove('active');
+    if (demographicsScreen) demographicsScreen.classList.remove('active');
+    
+    // Manage body class for overlay screens
+    const overlayScreens = ['userid', 'consent', 'survey1', 'survey2', 'demographics'];
+    if (overlayScreens.includes(screenName)) {
+        document.body.classList.add('has-screen-active');
+    } else {
+        document.body.classList.remove('has-screen-active');
+    }
+    
+    // Show requested screen
+    let targetScreen = null;
+    switch(screenName) {
+        case 'userid':
+            targetScreen = useridScreen;
+            break;
+        case 'consent':
+            targetScreen = consentScreen;
+            break;
+        case 'main':
+            targetScreen = mainScreen;
+            break;
+        case 'survey1':
+            targetScreen = survey1Screen;
+            break;
+        case 'survey2':
+            targetScreen = survey2Screen;
+            break;
+        case 'demographics':
+            targetScreen = demographicsScreen;
+            break;
+    }
+    
+    if (targetScreen) {
+        targetScreen.classList.add('active');
+        currentScreen = screenName;
+        
+        // Force a reflow to ensure styles are applied
+        void targetScreen.offsetHeight;
+        
+        // Double-check visibility
+        const computedStyle = window.getComputedStyle(targetScreen);
+        if (computedStyle.display === 'none' || computedStyle.visibility === 'hidden') {
+            // Force it to be visible
+            targetScreen.style.display = 'flex';
+            targetScreen.style.visibility = 'visible';
+            targetScreen.style.opacity = '1';
+        }
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+        targetScreen.scrollTop = 0;
+        
+        // Force visibility with inline styles as backup
+        targetScreen.style.setProperty('display', 'flex', 'important');
+        targetScreen.style.setProperty('visibility', 'visible', 'important');
+        targetScreen.style.setProperty('opacity', '1', 'important');
+        targetScreen.style.setProperty('z-index', '10000', 'important');
+        targetScreen.style.setProperty('position', 'fixed', 'important');
+        targetScreen.style.setProperty('top', '0', 'important');
+        targetScreen.style.setProperty('left', '0', 'important');
+        targetScreen.style.setProperty('width', '100vw', 'important');
+        targetScreen.style.setProperty('height', '100vh', 'important');
+        
+        // Hide main screen explicitly
+        if (mainScreen && screenName !== 'main') {
+            mainScreen.style.setProperty('display', 'none', 'important');
+            mainScreen.classList.remove('active');
+        }
+        
+        // Debug logging
+        console.log(`Showing ${screenName} screen:`, {
+            element: targetScreen,
+            hasActive: targetScreen.classList.contains('active'),
+            computedDisplay: computedStyle.display,
+            computedVisibility: computedStyle.visibility,
+            computedZIndex: computedStyle.zIndex,
+            computedOpacity: computedStyle.opacity,
+            rect: targetScreen.getBoundingClientRect(),
+            innerHTML: targetScreen.innerHTML.substring(0, 200) // First 200 chars of HTML
+        });
+    } else {
+        console.error(`${screenName} screen element not found!`);
+        // Try to reinitialize
+        if (screenName !== 'main') {
+            initializeDOMElements();
+            // Retry after a short delay
+            setTimeout(() => showScreen(screenName), 100);
+        }
+    }
+}
+
+// Event listeners are now initialized in initializeEventListeners() function
+
+// Initialize main UI (called after consent or test mode)
+function initializeMainUI() {
+    // Load advice post
+    loadAdvicePost();
+    // Add initial greeting after loading advice post
+    addMessage('assistant', getInitialGreeting());
+    // Initialize score tracking
+    initializeScoreTracking();
+    // Start stopwatch
+    startStopwatch();
+    // Initialize score display
+    updateScoreDisplay();
+    messageInput.focus();
+}
+
+// Handle comment submit - now navigates to survey instead of emailing
 commentSubmitBtn.addEventListener('click', async function(e) {
     e.preventDefault();
     const draft = commentInput.value.trim();
@@ -1272,8 +1404,7 @@ commentSubmitBtn.addEventListener('click', async function(e) {
         'Are you sure you want to submit your response?\n\n' +
         'This will:\n' +
         '- Stop the timer\n' +
-        '- Save all data to a JSON file\n' +
-        '- Complete your submission\n\n' +
+        '- Move to the survey page\n\n' +
         'Click OK to proceed or Cancel to continue editing.'
     );
     
@@ -1288,33 +1419,17 @@ commentSubmitBtn.addEventListener('click', async function(e) {
     commentSubmitBtn.disabled = true;
     commentSubmitBtn.innerHTML = '<span>Submitting...</span>';
     
-    // Collect all data
-    const submissionData = collectSubmissionData();
+    // Store submission data for later (will be sent with survey)
+    window.pendingSubmissionData = collectSubmissionData();
     
-    // Create filename with timestamp
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-    const filename = `advice-response-submission-${timestamp}.json`;
+    // Navigate to first survey screen
+    showScreen('survey1');
     
-    // Download JSON file
-    downloadJSON(submissionData, filename);
-    
-    // Try to send email
-    const emailResult = await emailSubmission(submissionData);
-    
-    if (emailResult.success) {
-        showNotification('✅ Submission complete! Email sent and JSON file downloaded.', 'success');
-    } else {
-        // Email failed, but file was downloaded
-        showNotification(`⚠️ JSON file downloaded, but email failed: ${emailResult.message}`, 'warning');
-    }
-    
-    // Update button
+    // Reset button state
     setTimeout(() => {
         commentSubmitBtn.disabled = false;
-        commentSubmitBtn.innerHTML = '<span>Submitted</span>';
-        commentSubmitBtn.style.opacity = '0.6';
-        commentSubmitBtn.style.cursor = 'not-allowed';
-    }, 1000);
+        commentSubmitBtn.innerHTML = '<span>Submit</span>';
+    }, 500);
 });
 
 // Handle Ask AI Feedback button
@@ -1460,18 +1575,220 @@ CRITICAL INSTRUCTIONS FOR FEEDBACK:
 Provide feedback that helps the user improve their draft through their own editing.`;
 }
 
+// Store survey data as we go through the forms
+window.surveyData = {};
+
+// Survey form handlers are now initialized in initializeEventListeners() function
+
+// Initialize DOM elements and event listeners
+function initializeDOMElements() {
+    useridScreen = document.getElementById('useridScreen');
+    consentScreen = document.getElementById('consentScreen');
+    mainScreen = document.getElementById('mainScreen');
+    survey1Screen = document.getElementById('survey1Screen');
+    survey2Screen = document.getElementById('survey2Screen');
+    demographicsScreen = document.getElementById('demographicsScreen');
+    userIDInput = document.getElementById('userIDInput');
+    continueBtn = document.getElementById('continueBtn');
+    testBtn = document.getElementById('testBtn');
+    agreeBtn = document.getElementById('agreeBtn');
+    disagreeBtn = document.getElementById('disagreeBtn');
+    survey1Form = document.getElementById('survey1Form');
+    survey2Form = document.getElementById('survey2Form');
+    demographicsForm = document.getElementById('demographicsForm');
+    nextSurvey1Btn = document.getElementById('nextSurvey1Btn');
+    nextSurvey2Btn = document.getElementById('nextSurvey2Btn');
+    submitDemographicsBtn = document.getElementById('submitDemographicsBtn');
+    
+    // Verify elements exist
+    if (!survey1Screen) console.error('survey1Screen element not found!');
+    if (!survey2Screen) console.error('survey2Screen element not found!');
+    if (!demographicsScreen) console.error('demographicsScreen element not found!');
+    
+    // Initialize event listeners after elements are loaded
+    initializeEventListeners();
+}
+
+// Initialize all event listeners
+function initializeEventListeners() {
+    // UserID entry handlers
+    if (continueBtn) {
+        continueBtn.addEventListener('click', function() {
+            const enteredUserID = userIDInput.value.trim();
+            if (!enteredUserID) {
+                showNotification('⚠️ Please enter a User ID or click "Test" to proceed.', 'warning');
+                return;
+            }
+            userID = enteredUserID;
+            isTestMode = false;
+            showScreen('consent');
+        });
+    }
+    
+    if (testBtn) {
+        testBtn.addEventListener('click', function() {
+            userID = 'test-user';
+            isTestMode = true;
+            showScreen('main');
+            initializeMainUI();
+        });
+    }
+    
+    // Allow Enter key to submit userID
+    if (userIDInput) {
+        userIDInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                continueBtn.click();
+            }
+        });
+    }
+    
+    // Consent form handlers
+    if (agreeBtn) {
+        agreeBtn.addEventListener('click', function() {
+            showScreen('main');
+            initializeMainUI();
+        });
+    }
+    
+    if (disagreeBtn) {
+        disagreeBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you do not agree? You will be returned to the User ID entry screen.')) {
+                showScreen('userid');
+                userIDInput.value = '';
+                userIDInput.focus();
+            }
+        });
+    }
+    
+    // Survey form handlers
+    if (survey1Form) {
+        survey1Form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collect survey 1 data
+            const formData = new FormData(survey1Form);
+            window.surveyData = window.surveyData || {};
+            window.surveyData.survey1 = {
+                heard_understood: formData.get('heard_understood'),
+                best_interests: formData.get('best_interests'),
+                saw_as_person: formData.get('saw_as_person'),
+                understood_important: formData.get('understood_important')
+            };
+            
+            // Navigate to survey 2
+            showScreen('survey2');
+        });
+    }
+    
+    if (survey2Form) {
+        survey2Form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collect survey 2 data
+            const formData = new FormData(survey2Form);
+            window.surveyData = window.surveyData || {};
+            window.surveyData.survey2 = {
+                deceptive: formData.get('deceptive'),
+                underhanded: formData.get('underhanded'),
+                suspicious: formData.get('suspicious'),
+                wary: formData.get('wary'),
+                harmful: formData.get('harmful'),
+                confident: formData.get('confident'),
+                security: formData.get('security'),
+                integrity: formData.get('integrity'),
+                dependable: formData.get('dependable'),
+                reliable: formData.get('reliable'),
+                trust: formData.get('trust'),
+                familiar: formData.get('familiar')
+            };
+            
+            // Navigate to demographics
+            showScreen('demographics');
+        });
+    }
+    
+    if (demographicsForm) {
+        demographicsForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Collect demographics data
+            const formData = new FormData(demographicsForm);
+            window.surveyData = window.surveyData || {};
+            window.surveyData.demographics = {
+                ageGroup: formData.get('ageGroup'),
+                gender: formData.get('gender')
+            };
+            
+            // Combine all data
+            const completeSubmissionData = {
+                ...window.pendingSubmissionData,
+                surveyData: {
+                    survey1: window.surveyData.survey1,
+                    survey2: window.surveyData.survey2,
+                    demographics: window.surveyData.demographics
+                },
+                userID: userID,
+                isTestMode: isTestMode
+            };
+            
+            // Disable submit button
+            if (submitDemographicsBtn) {
+                submitDemographicsBtn.disabled = true;
+                submitDemographicsBtn.innerHTML = '<span>Submitting...</span>';
+            }
+            
+            // Create filename with timestamp
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            const filename = `advice-response-submission-${userID}-${timestamp}.json`;
+            
+            // Download JSON file
+            downloadJSON(completeSubmissionData, filename);
+            
+            // Try to send email
+            const emailResult = await emailSubmission(completeSubmissionData);
+            
+            if (emailResult.success) {
+                showNotification('✅ Submission complete! Email sent and JSON file downloaded.', 'success');
+                // Show completion message
+                setTimeout(() => {
+                    alert('Thank you for participating! Your submission has been received.');
+                }, 1000);
+            } else {
+                // Email failed, but file was downloaded
+                showNotification(`⚠️ JSON file downloaded, but email failed: ${emailResult.message}`, 'warning');
+                alert('Your data has been saved locally, but email submission failed. Please contact the research team.');
+            }
+            
+            // Reset button
+            if (submitDemographicsBtn) {
+                submitDemographicsBtn.disabled = false;
+                submitDemographicsBtn.innerHTML = '<span>Submit Response</span>';
+            }
+        });
+    }
+}
+
+// Initialize as early as possible
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeDOMElements);
+} else {
+    // DOM is already ready
+    initializeDOMElements();
+}
+
 // Focus on input on load
 window.addEventListener('load', async () => {
-    await loadAdvicePost();
-    // Add initial greeting after loading advice post
-    addMessage('assistant', getInitialGreeting());
-    // Initialize score tracking
-    initializeScoreTracking();
-    // Start stopwatch
-    startStopwatch();
-    // Initialize score display
-    updateScoreDisplay();
-    messageInput.focus();
+    // Make sure elements are initialized
+    if (!useridScreen) {
+        initializeDOMElements();
+    }
+    
+    // Start with userID screen
+    showScreen('userid');
+    if (userIDInput) {
+        userIDInput.focus();
+    }
 });
 
 // Clean up interval on page unload
