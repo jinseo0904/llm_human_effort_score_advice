@@ -35,9 +35,32 @@ let scores = {
 // Store all AI-generated text for similarity comparison
 let aiGeneratedTexts = [];
 
+// Track last draft sent for AI feedback (to prevent abuse)
+let lastFeedbackDraft = '';
+
 // Stopwatch variables
 let stopwatchStartTime = null;
 let stopwatchInterval = null;
+
+// Typing pattern detection to prevent gaming
+const typingPatterns = {
+    responseInput: {
+        previousValue: '',
+        previousLength: 0,
+        lastChangeTime: Date.now(),
+        consecutiveRepeats: 0,
+        lastChar: '',
+        changeHistory: [] // Track recent changes
+    },
+    chatInput: {
+        previousValue: '',
+        previousLength: 0,
+        lastChangeTime: Date.now(),
+        consecutiveRepeats: 0,
+        lastChar: '',
+        changeHistory: []
+    }
+};
 
 // Human Effort Score weights (configurable - experiment with these values)
 const hesWeights = {
@@ -258,39 +281,359 @@ function startStopwatch() {
     }, 1000);
 }
 
+// Check if typing is valid (not repetitive or meaningless)
+function isValidTyping(currentValue, pattern, currentLength, now, inputType) {
+    const timeSinceLastChange = now - pattern.lastChangeTime;
+    
+    // If length decreased, it's deletion (already filtered by keydown, but double-check)
+    if (currentLength < pattern.previousLength) {
+        return false;
+    }
+    
+    // Check for rapid repetitive typing (same character repeated quickly)
+    if (currentLength > pattern.previousLength) {
+        const addedChar = currentValue[currentLength - 1];
+        
+        // If same character as last time, check for repetition
+        if (addedChar === pattern.lastChar && timeSinceLastChange < 100) {
+            pattern.consecutiveRepeats++;
+            
+            // If same character repeated 5+ times quickly, ignore
+            if (pattern.consecutiveRepeats >= 5) {
+                showNotification('⚠️ Repetitive typing detected. This will not count toward your score.', 'warning');
+                return false;
+            }
+        } else {
+            pattern.consecutiveRepeats = 0;
+        }
+        
+        pattern.lastChar = addedChar;
+    }
+    
+    // Check for repeated words/phrases (e.g., "asdf asdf asdf" or "hello hello hello")
+    if (currentLength >= 6) { // Only check if there's enough text
+        const words = currentValue.toLowerCase().trim().split(/\s+/);
+        
+        // Check if same word appears 3+ times consecutively
+        if (words.length >= 3) {
+            let consecutiveRepeats = 1;
+            let lastWord = words[0];
+            
+            for (let i = 1; i < words.length; i++) {
+                if (words[i] === lastWord) {
+                    consecutiveRepeats++;
+                    if (consecutiveRepeats >= 3) {
+                        showNotification('⚠️ Repeated words detected. This will not count toward your score.', 'warning');
+                        return false; // Same word repeated 3+ times
+                    }
+                } else {
+                    consecutiveRepeats = 1;
+                    lastWord = words[i];
+                }
+            }
+        }
+        
+        // Check for repeated short sequences (2-6 characters) like "asdf asdf asdf"
+        const normalizedValue = currentValue.toLowerCase().trim();
+        const minSequenceLength = 2;
+        const maxSequenceLength = 6;
+        
+        for (let seqLen = minSequenceLength; seqLen <= maxSequenceLength; seqLen++) {
+            if (normalizedValue.length < seqLen * 3) continue; // Need at least 3 repetitions
+            
+            // Extract potential sequences
+            const sequences = [];
+            for (let i = 0; i <= normalizedValue.length - seqLen; i++) {
+                const seq = normalizedValue.substring(i, i + seqLen);
+                // Only consider sequences that are separated by spaces or are at word boundaries
+                if (i === 0 || normalizedValue[i - 1] === ' ' || 
+                    (i + seqLen < normalizedValue.length && normalizedValue[i + seqLen] === ' ')) {
+                    sequences.push({ seq, pos: i });
+                }
+            }
+            
+            // Check for repeated sequences
+            if (sequences.length >= 3) {
+                for (let i = 0; i < sequences.length - 2; i++) {
+                    const seq1 = sequences[i].seq;
+                    const seq2 = sequences[i + 1].seq;
+                    const seq3 = sequences[i + 2].seq;
+                    
+                    // Check if three consecutive sequences are the same
+                    if (seq1 === seq2 && seq2 === seq3 && seq1.length >= 2) {
+                        // Verify they're separated (not part of a longer word)
+                        const pos1 = sequences[i].pos;
+                        const pos2 = sequences[i + 1].pos;
+                        const pos3 = sequences[i + 2].pos;
+                        
+                        // Check if sequences are properly separated
+                        const gap1 = pos2 - (pos1 + seqLen);
+                        const gap2 = pos3 - (pos2 + seqLen);
+                        
+                        // If gaps are small (0-2 chars, allowing for spaces), it's a repeat
+                        if (gap1 <= 2 && gap2 <= 2) {
+                            showNotification('⚠️ Repeated phrases detected. This will not count toward your score.', 'warning');
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Check for character-level patterns (e.g., "ababab" or "abcabcabc")
+        if (normalizedValue.length >= 6) {
+            // Check for 2-4 character patterns repeated
+            for (let patternLen = 2; patternLen <= 4; patternLen++) {
+                if (normalizedValue.length < patternLen * 3) continue;
+                
+                const pattern = normalizedValue.substring(0, patternLen);
+                let matches = 1;
+                
+                // Check if pattern repeats
+                for (let i = patternLen; i <= normalizedValue.length - patternLen; i += patternLen) {
+                    const nextPattern = normalizedValue.substring(i, i + patternLen);
+                    if (nextPattern === pattern) {
+                        matches++;
+                    if (matches >= 3) {
+                        showNotification('⚠️ Repetitive pattern detected. This will not count toward your score.', 'warning');
+                        return false; // Pattern repeated 3+ times
+                    }
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    
+    // Check for typing and erasing repeatedly (oscillating length)
+    pattern.changeHistory.push({
+        length: currentLength,
+        time: now,
+        value: currentValue
+    });
+    
+    // Keep only last 10 changes
+    if (pattern.changeHistory.length > 10) {
+        pattern.changeHistory.shift();
+    }
+    
+    // If length oscillates between similar values repeatedly, it's meaningless
+    if (pattern.changeHistory.length >= 6) {
+        const recent = pattern.changeHistory.slice(-6);
+        const lengths = recent.map(c => c.length);
+        const uniqueLengths = new Set(lengths);
+        
+        // If oscillating between 2-3 similar lengths, likely meaningless
+        if (uniqueLengths.size <= 3) {
+            const variance = Math.max(...lengths) - Math.min(...lengths);
+            if (variance <= 5) { // Small variance, likely meaningless typing
+                showNotification('⚠️ Meaningless typing detected. This will not count toward your score.', 'warning');
+                return false;
+            }
+        }
+    }
+    
+    // Check for very rapid typing (likely spam)
+    if (timeSinceLastChange < 50 && currentLength === pattern.previousLength + 1) {
+        // Very fast single character addition might be spam
+        // But allow it if it's part of normal typing
+        return true; // Allow for now, consecutive repeats check will catch spam
+    }
+    
+    return true;
+}
+
+// Update typing pattern tracking
+function updateTypingPattern(pattern, currentValue, currentLength, now) {
+    pattern.previousValue = currentValue;
+    pattern.previousLength = currentLength;
+    pattern.lastChangeTime = now;
+}
+
+// Check if AI prompt is relevant to the advice-writing context
+async function checkPromptRelevance(userPrompt) {
+    if (!userPrompt || userPrompt.trim().length < 10) {
+        return { relevant: true, reason: 'Prompt too short' };
+    }
+    
+    const adviceContext = currentAdvicePost || 'Someone is asking for advice on a personal situation.';
+    
+    const relevanceCheckPrompt = `You are checking if a user's question is relevant to helping them write advice.
+
+Context: The user is writing advice to help someone with this situation:
+${adviceContext}
+
+User's question: "${userPrompt}"
+
+Is this question relevant to helping write advice? Respond with ONLY "YES" or "NO" followed by a brief reason (one sentence).
+
+Examples of RELEVANT questions:
+- "How should I start my advice?"
+- "What tone should I use?"
+- "Is this sentence clear?"
+- "What should I include?"
+
+Examples of IRRELEVANT questions:
+- "What's the weather?"
+- "Tell me a joke"
+- "What's 2+2?"
+- Random unrelated questions`;
+
+    try {
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const url = isLocalhost 
+            ? `${OLLAMA_API_URL}/api/generate`
+            : `${OLLAMA_API_URL}?endpoint=/api/generate`;
+        
+        const requestBody = {
+            model: MODEL_NAME,
+            prompt: relevanceCheckPrompt,
+            stream: false
+        };
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody)
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const result = data.response || '';
+            const isRelevant = result.toUpperCase().includes('YES');
+            
+            return {
+                relevant: isRelevant,
+                reason: result
+            };
+        } else {
+            // If check fails, assume relevant (don't block user)
+            return { relevant: true, reason: 'Relevance check failed' };
+        }
+    } catch (error) {
+        console.error('Relevance check error:', error);
+        // If check fails, assume relevant (don't block user)
+        return { relevant: true, reason: 'Relevance check error' };
+    }
+}
+
+// Show notification in corner
+function showNotification(message, type = 'warning') {
+    // Remove existing notification if any
+    const existing = document.getElementById('hes-notification');
+    if (existing) {
+        existing.remove();
+    }
+    
+    const notification = document.createElement('div');
+    notification.id = 'hes-notification';
+    notification.className = `hes-notification hes-notification-${type}`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
+    
+    // Remove after 5 seconds
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 300);
+    }, 5000);
+}
+
 // Initialize score tracking
 function initializeScoreTracking() {
+    // Scroll tracking disabled for performance
     // Track scrolling in situation box
-    const advicePostContent = document.querySelector('.advice-post-content');
-    if (advicePostContent) {
-        advicePostContent.addEventListener('scroll', throttle(function() {
-            scores.situationScroll++;
-            updateScoreDisplay();
-        }, 100)); // Throttle to once per 100ms
-    }
+    // const advicePostContent = document.querySelector('.advice-post-content');
+    // if (advicePostContent) {
+    //     advicePostContent.addEventListener('scroll', throttle(function() {
+    //         scores.situationScroll++;
+    //         updateScoreDisplay();
+    //     }, 100)); // Throttle to once per 100ms
+    // }
     
     // Track scrolling in AI chat box
-    if (chatMessages) {
-        chatMessages.addEventListener('scroll', throttle(function() {
-            scores.chatScroll++;
-            updateScoreDisplay();
-        }, 100)); // Throttle to once per 100ms
-    }
+    // if (chatMessages) {
+    //     chatMessages.addEventListener('scroll', throttle(function() {
+    //         scores.chatScroll++;
+    //         updateScoreDisplay();
+    //     }, 100)); // Throttle to once per 100ms
+    // }
     
-    // Track typing in response input and update similarity in real-time
+    // Track typing in response input with pattern detection
     if (commentInput) {
-        commentInput.addEventListener('input', function() {
-            scores.responseTyping++;
-            // Update similarity calculation in real-time
-            updateScoreDisplay();
+        commentInput.addEventListener('keydown', function(e) {
+            // Don't count backspace
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+                return;
+            }
+        });
+        
+        commentInput.addEventListener('input', function(e) {
+            const currentValue = this.value;
+            const pattern = typingPatterns.responseInput;
+            const currentLength = currentValue.length;
+            const now = Date.now();
+            
+            // Update word count display
+            const wordCount = countWords(currentValue);
+            const wordCountElement = document.getElementById('wordCount');
+            if (wordCountElement) {
+                wordCountElement.textContent = `${wordCount} word${wordCount !== 1 ? 's' : ''}`;
+                // Change color if below threshold
+                if (wordCount < 31) {
+                    wordCountElement.style.color = '#dc3545';
+                } else {
+                    wordCountElement.style.color = '#333';
+                }
+            }
+            
+            // Check if this is valid typing (not repetitive or meaningless)
+            if (isValidTyping(currentValue, pattern, currentLength, now, 'response')) {
+                scores.responseTyping++;
+                // Update similarity calculation in real-time
+                updateScoreDisplay();
+            }
+            
+            // Update pattern tracking
+            updateTypingPattern(pattern, currentValue, currentLength, now);
         });
     }
     
-    // Track typing in AI chat input
+    // Track typing in AI chat input with pattern detection
     if (messageInput) {
-        messageInput.addEventListener('input', function() {
-            scores.chatTyping++;
-            updateScoreDisplay();
+        messageInput.addEventListener('keydown', function(e) {
+            // Don't count backspace
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+                return;
+            }
+        });
+        
+        messageInput.addEventListener('input', function(e) {
+            const currentValue = this.value;
+            const pattern = typingPatterns.chatInput;
+            const currentLength = currentValue.length;
+            const now = Date.now();
+            
+            // Check if this is valid typing (not repetitive or meaningless)
+            if (isValidTyping(currentValue, pattern, currentLength, now, 'chat')) {
+                scores.chatTyping++;
+                updateScoreDisplay();
+            }
+            
+            // Update pattern tracking
+            updateTypingPattern(pattern, currentValue, currentLength, now);
         });
     }
 }
@@ -391,13 +734,8 @@ async function sendMessage() {
     
     if (message === '') return;
     
-    // Track AI prompt
-    scores.aiPrompts++;
-    updateScoreDisplay();
-    
-    // Add user message
+    // Add user message first (for better UX)
     addMessage('user', message);
-    conversationHistory.push({ role: 'user', content: message });
     
     // Clear input
     messageInput.value = '';
@@ -406,6 +744,28 @@ async function sendMessage() {
     // Disable send button temporarily
     sendBtn.disabled = true;
     messageInput.disabled = true;
+    
+    // Check if prompt is relevant before counting and processing
+    const relevanceCheck = await checkPromptRelevance(message);
+    
+    if (!relevanceCheck.relevant) {
+        // Show warning notification
+        showNotification('⚠️ Your question is not relevant to writing advice. Please ask questions related to crafting your response.', 'warning');
+        // Don't increment count, don't send to AI
+        // Show a response indicating the question is off-topic
+        addMessage('assistant', 'I can only help you with writing your advice response. Please ask questions related to crafting your advice, such as tone, structure, or clarity.');
+        sendBtn.disabled = false;
+        messageInput.disabled = false;
+        messageInput.focus();
+        return;
+    }
+    
+    // Track AI prompt (only if relevant)
+    scores.aiPrompts++;
+    updateScoreDisplay();
+    
+    // Add to conversation history
+    conversationHistory.push({ role: 'user', content: message });
     
     // Show typing indicator
     const typingIndicator = addTypingIndicator();
@@ -682,15 +1042,238 @@ async function loadAdvicePost(filename = 'sample1.txt') {
     }
 }
 
-// Handle comment submit (placeholder - doesn't need to work yet)
-commentSubmitBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    const comment = commentInput.value.trim();
-    if (comment) {
-        console.log('Comment submitted:', comment);
-        // Placeholder - functionality to be implemented later
-        alert('Comment submission functionality coming soon!');
+// Count words in text
+function countWords(text) {
+    if (!text || text.trim().length === 0) return 0;
+    return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+}
+
+// Calculate similarity percentage between two texts
+function calculateTextSimilarity(text1, text2) {
+    if (!text1 || !text2) return 0;
+    const normalize = (str) => str.toLowerCase().replace(/\s+/g, ' ').trim();
+    const norm1 = normalize(text1);
+    const norm2 = normalize(text2);
+    
+    if (norm1 === norm2) return 100;
+    if (norm1.length === 0 || norm2.length === 0) return 0;
+    
+    // Use Levenshtein distance
+    const len1 = norm1.length;
+    const len2 = norm2.length;
+    const matrix = [];
+    
+    for (let i = 0; i <= len1; i++) {
+        matrix[i] = [i];
     }
+    for (let j = 0; j <= len2; j++) {
+        matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= len1; i++) {
+        for (let j = 1; j <= len2; j++) {
+            if (norm1[i - 1] === norm2[j - 1]) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j - 1] + 1
+                );
+            }
+        }
+    }
+    
+    const distance = matrix[len1][len2];
+    const maxLen = Math.max(len1, len2);
+    return Math.round((1 - distance / maxLen) * 100);
+}
+
+// Stop the stopwatch
+function stopStopwatch() {
+    if (stopwatchInterval) {
+        clearInterval(stopwatchInterval);
+        stopwatchInterval = null;
+    }
+    // Final update of time
+    if (stopwatchStartTime) {
+        scores.timeOnPageSeconds = (Date.now() - stopwatchStartTime) / 1000;
+        updateScoreDisplay();
+    }
+}
+
+// Collect all submission data
+function collectSubmissionData() {
+    const draft = commentInput.value.trim();
+    const wordCount = countWords(draft);
+    const similarity = calculateDraftSimilarity(draft);
+    
+    // Get all chat messages
+    const chatMessagesElements = chatMessages.querySelectorAll('.message');
+    const chatHistory = [];
+    
+    chatMessagesElements.forEach(msgEl => {
+        const type = msgEl.classList.contains('user') ? 'user' : 
+                     msgEl.classList.contains('assistant') ? 'assistant' : 
+                     msgEl.classList.contains('system') ? 'system' : 'unknown';
+        
+        const contentDiv = msgEl.querySelector('.message-content');
+        if (contentDiv) {
+            const label = contentDiv.querySelector('strong');
+            const textDiv = contentDiv.querySelector('div');
+            const text = textDiv ? textDiv.textContent.trim() : '';
+            
+            if (text) {
+                chatHistory.push({
+                    type: type,
+                    label: label ? label.textContent : '',
+                    content: text,
+                    timestamp: new Date().toISOString() // Approximate timestamp
+                });
+            }
+        }
+    });
+    
+    return {
+        timestamp: new Date().toISOString(),
+        advicePost: currentAdvicePost,
+        finalResponse: draft,
+        wordCount: wordCount,
+        draftSimilarity: similarity,
+        humanEffortScore: {
+            raw: scores,
+            calculated: calculateHES(),
+            weights: hesWeights
+        },
+        chatHistory: chatHistory,
+        conversationHistory: conversationHistory,
+        aiGeneratedTexts: aiGeneratedTexts.length,
+        metrics: {
+            totalInteractions: scores.situationScroll + scores.chatScroll + 
+                             scores.responseTyping + scores.chatTyping + 
+                             scores.aiPrompts + scores.aiFeedback,
+            timeOnPage: {
+                seconds: Math.round(scores.timeOnPageSeconds),
+                formatted: formatTime(scores.timeOnPageSeconds)
+            }
+        }
+    };
+}
+
+// Download JSON file
+function downloadJSON(data, filename) {
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+// Upload to Google Drive (requires Google Drive API setup)
+async function uploadToGoogleDrive(jsonData) {
+    // This would require:
+    // 1. Google Drive API credentials
+    // 2. OAuth authentication
+    // 3. Server-side proxy (for security)
+    // 
+    // Example structure:
+    // const response = await fetch('/api/upload-to-drive', {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify({ data: jsonData })
+    // });
+    
+    console.log('Google Drive upload not configured. Downloading file instead.');
+    return false;
+}
+
+// Email submission via Resend API
+async function emailSubmission(jsonData) {
+    try {
+        const response = await fetch('/api/send-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ submissionData: jsonData })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            return { success: true, message: result.message || 'Email sent successfully' };
+        } else {
+            const error = await response.json();
+            return { success: false, message: error.message || 'Failed to send email' };
+        }
+    } catch (error) {
+        console.error('Email submission error:', error);
+        return { success: false, message: error.message || 'Network error while sending email' };
+    }
+}
+
+// Handle comment submit
+commentSubmitBtn.addEventListener('click', async function(e) {
+    e.preventDefault();
+    const draft = commentInput.value.trim();
+    
+    if (!draft) {
+        showNotification('⚠️ Please write a response before submitting.', 'warning');
+        return;
+    }
+    
+    // Show confirmation dialog
+    const confirmed = confirm(
+        'Are you sure you want to submit your response?\n\n' +
+        'This will:\n' +
+        '- Stop the timer\n' +
+        '- Save all data to a JSON file\n' +
+        '- Complete your submission\n\n' +
+        'Click OK to proceed or Cancel to continue editing.'
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    // Stop the stopwatch
+    stopStopwatch();
+    
+    // Disable submit button to prevent double submission
+    commentSubmitBtn.disabled = true;
+    commentSubmitBtn.innerHTML = '<span>Submitting...</span>';
+    
+    // Collect all data
+    const submissionData = collectSubmissionData();
+    
+    // Create filename with timestamp
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const filename = `advice-response-submission-${timestamp}.json`;
+    
+    // Download JSON file
+    downloadJSON(submissionData, filename);
+    
+    // Try to send email
+    const emailResult = await emailSubmission(submissionData);
+    
+    if (emailResult.success) {
+        showNotification('✅ Submission complete! Email sent and JSON file downloaded.', 'success');
+    } else {
+        // Email failed, but file was downloaded
+        showNotification(`⚠️ JSON file downloaded, but email failed: ${emailResult.message}`, 'warning');
+    }
+    
+    // Update button
+    setTimeout(() => {
+        commentSubmitBtn.disabled = false;
+        commentSubmitBtn.innerHTML = '<span>Submitted</span>';
+        commentSubmitBtn.style.opacity = '0.6';
+        commentSubmitBtn.style.cursor = 'not-allowed';
+    }, 1000);
 });
 
 // Handle Ask AI Feedback button
@@ -700,10 +1283,31 @@ askAiFeedbackBtn.addEventListener('click', async function(e) {
     
     if (!draft) {
         addMessage('system', 'Please write a draft in the text box before asking for feedback.');
+        showNotification('⚠️ Please write a draft before asking for feedback.', 'warning');
         return;
     }
     
-    // Track AI feedback request
+    // Validate word count (must be more than 30 words)
+    const wordCount = countWords(draft);
+    if (wordCount <= 30) {
+        addMessage('system', `Your draft has ${wordCount} words. Please write at least 31 words before asking for feedback.`);
+        showNotification(`⚠️ Draft too short (${wordCount} words). Need at least 31 words for feedback.`, 'warning');
+        return;
+    }
+    
+    // Validate that draft is significantly different from last feedback draft (at least 10% different)
+    if (lastFeedbackDraft) {
+        const similarity = calculateTextSimilarity(draft, lastFeedbackDraft);
+        const difference = 100 - similarity;
+        
+        if (difference < 10) {
+            addMessage('system', `Your draft is ${difference.toFixed(1)}% different from your last feedback request. Please make at least 10% changes before requesting feedback again.`);
+            showNotification(`⚠️ Draft too similar to last feedback (${difference.toFixed(1)}% different). Need at least 10% changes.`, 'warning');
+            return;
+        }
+    }
+    
+    // Track AI feedback request (only if validation passes)
     scores.aiFeedback++;
     updateScoreDisplay();
     
@@ -756,6 +1360,8 @@ askAiFeedbackBtn.addEventListener('click', async function(e) {
             
             // Store AI-generated text for similarity comparison
             aiGeneratedTexts.push(modelResponse);
+            // Store this draft as the last feedback draft
+            lastFeedbackDraft = draft;
             // Update similarity when new AI text is added
             updateScoreDisplay();
         } else {
