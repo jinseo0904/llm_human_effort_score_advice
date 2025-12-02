@@ -29,7 +29,7 @@ body {
 
 /* Left Pane Styles */
 .left-pane {
-    flex: 1;
+    flex: 0 0 40%;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -202,10 +202,108 @@ body {
     transform: translateY(0);
 }
 
-/* Right Pane Styles */
-.right-pane {
-    flex: 1;
+/* Middle Pane Styles (AI Chat) */
+.middle-pane {
+    flex: 0 0 40%;
     min-width: 0;
+}
+
+/* Right Pane Styles (Score Display) */
+.score-pane {
+    flex: 0 0 20%;
+    min-width: 0;
+}
+
+.score-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.score-content {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    background: #f8f9fa;
+}
+
+.score-section {
+    margin-bottom: 24px;
+}
+
+.score-section:last-child {
+    margin-bottom: 0;
+}
+
+.score-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #667eea;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.score-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.score-item.total-score {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 16px;
+    border-radius: 8px;
+    margin-top: 8px;
+    border-bottom: none;
+}
+
+.score-item.total-score .score-label {
+    color: white;
+    font-weight: 600;
+}
+
+.score-item.total-score .score-value {
+    color: white;
+    font-weight: 700;
+    font-size: 20px;
+}
+
+.score-label {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
+.score-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    font-family: 'Courier New', monospace;
+}
+
+.score-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.score-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.score-content::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.score-content::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
 
 .chat-container {
@@ -479,17 +577,20 @@ body {
     }
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
     .main-layout {
         flex-direction: column;
     }
     
-    .left-pane {
-        min-height: 50vh;
+    .left-pane,
+    .middle-pane,
+    .score-pane {
+        flex: 1 1 auto;
+        min-height: 33vh;
     }
     
-    .right-pane {
-        min-height: 50vh;
+    .score-pane {
+        order: 3;
     }
 }
 

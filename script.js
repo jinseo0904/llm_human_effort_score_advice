@@ -9,6 +9,292 @@ const commentInput = document.getElementById('commentInput');
 const commentSubmitBtn = document.getElementById('commentSubmitBtn');
 const askAiFeedbackBtn = document.getElementById('askAiFeedbackBtn');
 
+// Human Effort Score tracking
+const situationScrollCount = document.getElementById('situationScrollCount');
+const chatScrollCount = document.getElementById('chatScrollCount');
+const responseTypingCount = document.getElementById('responseTypingCount');
+const chatTypingCount = document.getElementById('chatTypingCount');
+const aiPromptCount = document.getElementById('aiPromptCount');
+const aiFeedbackCount = document.getElementById('aiFeedbackCount');
+const draftSimilarity = document.getElementById('draftSimilarity');
+const timeOnPage = document.getElementById('timeOnPage');
+const hesScore = document.getElementById('hesScore');
+const totalCount = document.getElementById('totalCount');
+
+// Score tracking variables
+let scores = {
+    situationScroll: 0,
+    chatScroll: 0,
+    responseTyping: 0,
+    chatTyping: 0,
+    aiPrompts: 0,
+    aiFeedback: 0,
+    timeOnPageSeconds: 0
+};
+
+// Store all AI-generated text for similarity comparison
+let aiGeneratedTexts = [];
+
+// Stopwatch variables
+let stopwatchStartTime = null;
+let stopwatchInterval = null;
+
+// Human Effort Score weights (configurable - experiment with these values)
+const hesWeights = {
+    situationScroll: 0.1,      // Weight for scrolling situation box
+    chatScroll: 0.1,           // Weight for scrolling chat
+    responseTyping: 2,       // Weight for typing in response input (higher - more effort)
+    chatTyping: 1,           // Weight for typing in chat input
+    aiPrompts: 1,           // Positive weight - using AI increases effort
+    aiFeedback: 1,          // Positive weight - using AI feedback increases effort
+    draftSimilarity: -2,     // Negative weight - copying AI text reduces effort (more negative = more penalty)
+    timeOnPage: 0.1         // Weight for time spent (seconds converted to score)
+};
+
+// Throttle function to limit event frequency
+function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+// Calculate text similarity using Levenshtein distance (normalized)
+function calculateSimilarity(text1, text2) {
+    if (!text1 || !text2) return 0;
+    
+    // Normalize texts: lowercase, remove extra whitespace
+    const normalize = (str) => str.toLowerCase().replace(/\s+/g, ' ').trim();
+    const norm1 = normalize(text1);
+    const norm2 = normalize(text2);
+    
+    if (norm1 === norm2) return 100;
+    if (norm1.length === 0 || norm2.length === 0) return 0;
+    
+    // Check if one text contains the other (substring match)
+    if (norm1.includes(norm2) || norm2.includes(norm1)) {
+        const shorter = Math.min(norm1.length, norm2.length);
+        const longer = Math.max(norm1.length, norm2.length);
+        return Math.round((shorter / longer) * 100);
+    }
+    
+    // Calculate Levenshtein distance
+    const len1 = norm1.length;
+    const len2 = norm2.length;
+    const matrix = [];
+    
+    // Initialize matrix
+    for (let i = 0; i <= len1; i++) {
+        matrix[i] = [i];
+    }
+    for (let j = 0; j <= len2; j++) {
+        matrix[0][j] = j;
+    }
+    
+    // Fill matrix
+    for (let i = 1; i <= len1; i++) {
+        for (let j = 1; j <= len2; j++) {
+            if (norm1[i - 1] === norm2[j - 1]) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j] + 1,     // deletion
+                    matrix[i][j - 1] + 1,     // insertion
+                    matrix[i - 1][j - 1] + 1 // substitution
+                );
+            }
+        }
+    }
+    
+    const distance = matrix[len1][len2];
+    const maxLen = Math.max(len1, len2);
+    const similarity = Math.round((1 - distance / maxLen) * 100);
+    
+    return Math.max(0, similarity);
+}
+
+// Calculate what percentage of the draft is AI-generated (original vs copied)
+function calculateDraftSimilarity(draft) {
+    if (!draft || draft.trim().length === 0) return 0;
+    if (aiGeneratedTexts.length === 0) return 0;
+    
+    // Normalize the draft
+    const normalizedDraft = draft.toLowerCase().replace(/\s+/g, ' ').trim();
+    const draftLength = normalizedDraft.length;
+    
+    if (draftLength === 0) return 0;
+    
+    // Track which characters/segments are AI-generated
+    // We'll use a sliding window approach to find matching segments
+    const aiGeneratedLength = new Set(); // Store indices of AI-generated characters
+    
+    // Compare with each AI-generated text
+    for (const aiText of aiGeneratedTexts) {
+        const normalizedAI = aiText.toLowerCase().replace(/\s+/g, ' ').trim();
+        
+        if (normalizedAI.length === 0) continue;
+        
+        // Use sliding window to find matching segments
+        // Check segments of different lengths (from 10 chars to full text)
+        const minSegmentLength = 10; // Minimum segment length to consider
+        
+        // Check for exact substring matches
+        for (let segmentLength = Math.min(draftLength, normalizedAI.length); 
+             segmentLength >= minSegmentLength; 
+             segmentLength--) {
+            
+            // Slide through the draft
+            for (let i = 0; i <= draftLength - segmentLength; i++) {
+                const draftSegment = normalizedDraft.substring(i, i + segmentLength);
+                
+                // Check if this segment exists in AI text
+                if (normalizedAI.includes(draftSegment)) {
+                    // Mark all characters in this segment as AI-generated
+                    for (let j = i; j < i + segmentLength; j++) {
+                        aiGeneratedLength.add(j);
+                    }
+                }
+            }
+        }
+        
+        // Also check if the entire draft is contained in AI text (full copy-paste)
+        if (normalizedAI.includes(normalizedDraft)) {
+            // Mark all characters as AI-generated
+            for (let i = 0; i < draftLength; i++) {
+                aiGeneratedLength.add(i);
+            }
+        }
+        
+        // Check if entire AI text is contained in draft (copy-paste of full AI response)
+        if (normalizedDraft.includes(normalizedAI)) {
+            // Find where AI text appears in draft
+            const startIndex = normalizedDraft.indexOf(normalizedAI);
+            for (let i = startIndex; i < startIndex + normalizedAI.length; i++) {
+                aiGeneratedLength.add(i);
+            }
+        }
+    }
+    
+    // Calculate percentage: (AI-generated characters / total characters) × 100
+    const aiGeneratedCount = aiGeneratedLength.size;
+    const percentage = Math.round((aiGeneratedCount / draftLength) * 100);
+    
+    return Math.min(100, Math.max(0, percentage));
+}
+
+// Format time as MM:SS
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+// Calculate Human Effort Score (HES) using weighted sum
+function calculateHES() {
+    const draft = commentInput.value.trim();
+    const similarity = calculateDraftSimilarity(draft);
+    
+    // Calculate weighted sum
+    let hes = 0;
+    
+    // Positive contributions (effort)
+    hes += scores.situationScroll * hesWeights.situationScroll;
+    hes += scores.chatScroll * hesWeights.chatScroll;
+    hes += scores.responseTyping * hesWeights.responseTyping;
+    hes += scores.chatTyping * hesWeights.chatTyping;
+    
+    // Negative contributions (reduced effort / AI assistance)
+    hes += scores.aiPrompts * hesWeights.aiPrompts;
+    hes += scores.aiFeedback * hesWeights.aiFeedback;
+    hes += similarity * hesWeights.draftSimilarity; // Similarity is already a percentage
+    
+    // Time contribution
+    hes += scores.timeOnPageSeconds * hesWeights.timeOnPage;
+    
+    // Ensure score doesn't go below 0
+    return Math.max(0, Math.round(hes));
+}
+
+// Update score display
+function updateScoreDisplay() {
+    situationScrollCount.textContent = scores.situationScroll;
+    chatScrollCount.textContent = scores.chatScroll;
+    responseTypingCount.textContent = scores.responseTyping;
+    chatTypingCount.textContent = scores.chatTyping;
+    aiPromptCount.textContent = scores.aiPrompts;
+    aiFeedbackCount.textContent = scores.aiFeedback;
+    
+    // Calculate and display draft similarity
+    const draft = commentInput.value.trim();
+    const similarity = calculateDraftSimilarity(draft);
+    draftSimilarity.textContent = similarity + '%';
+    
+    // Update time display
+    timeOnPage.textContent = formatTime(scores.timeOnPageSeconds);
+    
+    // Calculate and display HES
+    const hes = calculateHES();
+    hesScore.textContent = hes;
+    
+    const total = scores.situationScroll + scores.chatScroll + scores.responseTyping + scores.chatTyping + scores.aiPrompts + scores.aiFeedback;
+    totalCount.textContent = total;
+}
+
+// Start stopwatch
+function startStopwatch() {
+    stopwatchStartTime = Date.now();
+    
+    // Update every second
+    stopwatchInterval = setInterval(() => {
+        const elapsed = (Date.now() - stopwatchStartTime) / 1000; // Convert to seconds
+        scores.timeOnPageSeconds = elapsed;
+        updateScoreDisplay();
+    }, 1000);
+}
+
+// Initialize score tracking
+function initializeScoreTracking() {
+    // Track scrolling in situation box
+    const advicePostContent = document.querySelector('.advice-post-content');
+    if (advicePostContent) {
+        advicePostContent.addEventListener('scroll', throttle(function() {
+            scores.situationScroll++;
+            updateScoreDisplay();
+        }, 100)); // Throttle to once per 100ms
+    }
+    
+    // Track scrolling in AI chat box
+    if (chatMessages) {
+        chatMessages.addEventListener('scroll', throttle(function() {
+            scores.chatScroll++;
+            updateScoreDisplay();
+        }, 100)); // Throttle to once per 100ms
+    }
+    
+    // Track typing in response input and update similarity in real-time
+    if (commentInput) {
+        commentInput.addEventListener('input', function() {
+            scores.responseTyping++;
+            // Update similarity calculation in real-time
+            updateScoreDisplay();
+        });
+    }
+    
+    // Track typing in AI chat input
+    if (messageInput) {
+        messageInput.addEventListener('input', function() {
+            scores.chatTyping++;
+            updateScoreDisplay();
+        });
+    }
+}
+
 // Ollama API configuration
 // Use relative path for Vercel deployment, or localhost for local development
 const OLLAMA_API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -105,6 +391,10 @@ async function sendMessage() {
     
     if (message === '') return;
     
+    // Track AI prompt
+    scores.aiPrompts++;
+    updateScoreDisplay();
+    
     // Add user message
     addMessage('user', message);
     conversationHistory.push({ role: 'user', content: message });
@@ -155,6 +445,11 @@ async function sendMessage() {
             // Add assistant response
             addMessage('assistant', modelResponse);
             conversationHistory.push({ role: 'assistant', content: modelResponse });
+            
+            // Store AI-generated text for similarity comparison
+            aiGeneratedTexts.push(modelResponse);
+            // Update similarity when new AI text is added
+            updateScoreDisplay();
         } else {
             // Try to get error details from response
             let errorDetails = `Status: ${response.status} ${response.statusText}`;
@@ -195,6 +490,11 @@ function addMessage(type, text) {
     if (type === 'system') {
         formattedText = text.replace(/\n/g, '<br>');
     } else if (type === 'assistant') {
+        // Store AI-generated text for similarity comparison (skip HTML-only messages like initial greeting)
+        if (!text.includes('<ul') && !text.includes('<li')) {
+            aiGeneratedTexts.push(text);
+        }
+        
         // Parse markdown for assistant messages
         if (text.includes('<')) {
             // Already contains HTML, use as-is
@@ -217,6 +517,11 @@ function addMessage(type, text) {
     
     // Scroll to bottom
     chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Update similarity if this is an assistant message
+    if (type === 'assistant' && !text.includes('<ul')) {
+        updateScoreDisplay();
+    }
 }
 
 function buildSystemPrompt() {
@@ -224,22 +529,26 @@ function buildSystemPrompt() {
         ? `\n\nAdvice request:\n${currentAdvicePost}\n`
         : '';
     
-    return `You are an AI assistant helping a user write an advice response to someone else's challenging situation. 
+    return `You are an expert Writing Assistant. Your goal is to help the user (The Advisor) draft a supportive response to an anonymous person (The Advisee).
 
-IMPORTANT: The user you are chatting with is the person OFFERING advice (the advisor), NOT the person who asked for help. The advice request shown above is from someone else who needs help. Your role is to help the advisor craft their response.
+<roles>
+You: The Writing Assistant (helpful, concise, objective).
+User: The Advisor (writing the advice).
+Target Audience: The Advisee (the person described in the context below).
+</roles>
 
-Be concise and direct. Focus on practical guidance.
+<instruction>
+The user will ask you for help drafting parts of their response. 
+- If the user asks for an opening sentence, write one FROM the User TO the Advisee.
+- Never write from the perspective of the person having the problem.
+- Keep the tone empathetic but practical.
+</instruction>
 
-Guidelines:
-- Provide specific, actionable suggestions.
-- Identify key points to address
-- Suggest improvements to clarity and structure
-- Avoid flattery, emotional language, or lengthy explanations
-- Remember: The user is writing advice TO someone else, not asking for advice themselves
-
+<advice_context_reference>
 ${adviceContext}
+</advice_context_reference>
 
-Only respond with what the user asks for, and nothing else.`;
+respond_to_user:`;
 }
 
 function buildFullPrompt(systemPrompt, history) {
@@ -394,6 +703,10 @@ askAiFeedbackBtn.addEventListener('click', async function(e) {
         return;
     }
     
+    // Track AI feedback request
+    scores.aiFeedback++;
+    updateScoreDisplay();
+    
     // Disable button during request
     askAiFeedbackBtn.disabled = true;
     const originalText = askAiFeedbackBtn.innerHTML;
@@ -440,6 +753,11 @@ askAiFeedbackBtn.addEventListener('click', async function(e) {
             addMessage('assistant', modelResponse);
             conversationHistory.push({ role: 'user', content: 'Please provide feedback on my draft.' });
             conversationHistory.push({ role: 'assistant', content: modelResponse });
+            
+            // Store AI-generated text for similarity comparison
+            aiGeneratedTexts.push(modelResponse);
+            // Update similarity when new AI text is added
+            updateScoreDisplay();
         } else {
             // Try to get error details from response
             let errorDetails = `Status: ${response.status} ${response.statusText}`;
@@ -499,6 +817,19 @@ window.addEventListener('load', async () => {
     await loadAdvicePost();
     // Add initial greeting after loading advice post
     addMessage('assistant', getInitialGreeting());
+    // Initialize score tracking
+    initializeScoreTracking();
+    // Start stopwatch
+    startStopwatch();
+    // Initialize score display
+    updateScoreDisplay();
     messageInput.focus();
+});
+
+// Clean up interval on page unload
+window.addEventListener('beforeunload', () => {
+    if (stopwatchInterval) {
+        clearInterval(stopwatchInterval);
+    }
 });
 

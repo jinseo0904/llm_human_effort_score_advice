@@ -54,8 +54,8 @@
                 </div>
             </div>
             
-            <!-- Right Pane: AI Chat -->
-            <div class="right-pane">
+            <!-- Middle Pane: AI Chat -->
+            <div class="middle-pane">
                 <div class="chat-container">
                     <div class="chat-header">
                         <h1>AI Chat</h1>
@@ -92,6 +92,84 @@
                                 <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                             </svg>
                         </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Pane: Human Effort Score -->
+            <div class="score-pane">
+                <div class="score-container">
+                    <div class="section-header">
+                        <h2>Human Effort Score</h2>
+                    </div>
+                    <div class="score-content">
+                        <div class="score-section">
+                            <h3>Scrolling</h3>
+                            <div class="score-item">
+                                <span class="score-label">Situation Box:</span>
+                                <span id="situationScrollCount" class="score-value">0</span>
+                            </div>
+                            <div class="score-item">
+                                <span class="score-label">AI Chat Box:</span>
+                                <span id="chatScrollCount" class="score-value">0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="score-section">
+                            <h3>Typing</h3>
+                            <div class="score-item">
+                                <span class="score-label">Response Input:</span>
+                                <span id="responseTypingCount" class="score-value">0</span>
+                            </div>
+                            <div class="score-item">
+                                <span class="score-label">AI Chat Input:</span>
+                                <span id="chatTypingCount" class="score-value">0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="score-section">
+                            <h3>AI Interactions</h3>
+                            <div class="score-item">
+                                <span class="score-label">AI Prompts Sent:</span>
+                                <span id="aiPromptCount" class="score-value">0</span>
+                            </div>
+                            <div class="score-item">
+                                <span class="score-label">AI Feedback Requests:</span>
+                                <span id="aiFeedbackCount" class="score-value">0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="score-section">
+                            <h3>Draft Similarity</h3>
+                            <div class="score-item">
+                                <span class="score-label">Similarity to AI Text:</span>
+                                <span id="draftSimilarity" class="score-value">0%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="score-section">
+                            <h3>Time</h3>
+                            <div class="score-item">
+                                <span class="score-label">Time on Page:</span>
+                                <span id="timeOnPage" class="score-value">0:00</span>
+                            </div>
+                        </div>
+                        
+                        <div class="score-section">
+                            <h3>Human Effort Score</h3>
+                            <div class="score-item total-score">
+                                <span class="score-label">HES:</span>
+                                <span id="hesScore" class="score-value">0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="score-section">
+                            <h3>Total</h3>
+                            <div class="score-item">
+                                <span class="score-label">Total Interactions:</span>
+                                <span id="totalCount" class="score-value">0</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
