@@ -88,6 +88,17 @@ function throttle(func, limit) {
     };
 }
 
+// Debounce function to delay execution until after user stops typing
+function debounce(func, delay) {
+    let timeoutId;
+    return function() {
+        const args = arguments;
+        const context = this;
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(context, args), delay);
+    };
+}
+
 // Calculate text similarity using Levenshtein distance (normalized)
 function calculateSimilarity(text1, text2) {
     if (!text1 || !text2) return 0;
@@ -244,7 +255,23 @@ function calculateHES() {
     return Math.max(0, Math.round(hes));
 }
 
-// Update score display
+// Update score display (without similarity calculation for performance)
+function updateScoreDisplayFast() {
+    situationScrollCount.textContent = scores.situationScroll;
+    chatScrollCount.textContent = scores.chatScroll;
+    responseTypingCount.textContent = scores.responseTyping;
+    chatTypingCount.textContent = scores.chatTyping;
+    aiPromptCount.textContent = scores.aiPrompts;
+    aiFeedbackCount.textContent = scores.aiFeedback;
+    
+    // Update time display
+    timeOnPage.textContent = formatTime(scores.timeOnPageSeconds);
+    
+    const total = scores.situationScroll + scores.chatScroll + scores.responseTyping + scores.chatTyping + scores.aiPrompts + scores.aiFeedback;
+    totalCount.textContent = total;
+}
+
+// Update score display with similarity calculation (expensive)
 function updateScoreDisplay() {
     situationScrollCount.textContent = scores.situationScroll;
     chatScrollCount.textContent = scores.chatScroll;
@@ -253,7 +280,7 @@ function updateScoreDisplay() {
     aiPromptCount.textContent = scores.aiPrompts;
     aiFeedbackCount.textContent = scores.aiFeedback;
     
-    // Calculate and display draft similarity
+    // Calculate and display draft similarity (expensive operation)
     const draft = commentInput.value.trim();
     const similarity = calculateDraftSimilarity(draft);
     draftSimilarity.textContent = similarity + '%';
@@ -269,15 +296,23 @@ function updateScoreDisplay() {
     totalCount.textContent = total;
 }
 
+// Debounced version of updateScoreDisplay for typing events
+const debouncedUpdateScoreDisplay = debounce(updateScoreDisplay, 500);
+
 // Start stopwatch
 function startStopwatch() {
     stopwatchStartTime = Date.now();
     
-    // Update every second
+    // Update every second (use fast version to avoid expensive similarity calculation)
     stopwatchInterval = setInterval(() => {
         const elapsed = (Date.now() - stopwatchStartTime) / 1000; // Convert to seconds
         scores.timeOnPageSeconds = elapsed;
-        updateScoreDisplay();
+        // Use fast update for timer (similarity doesn't change with time)
+        updateScoreDisplayFast();
+        // Only update similarity/HES occasionally (every 5 seconds)
+        if (Math.floor(elapsed) % 5 === 0) {
+            updateScoreDisplay();
+        }
     }, 1000);
 }
 
@@ -602,8 +637,10 @@ function initializeScoreTracking() {
             // Check if this is valid typing (not repetitive or meaningless)
             if (isValidTyping(currentValue, pattern, currentLength, now, 'response')) {
                 scores.responseTyping++;
-                // Update similarity calculation in real-time
-                updateScoreDisplay();
+                // Update fast display (without expensive similarity calculation)
+                updateScoreDisplayFast();
+                // Debounce expensive similarity calculation
+                debouncedUpdateScoreDisplay();
             }
             
             // Update pattern tracking
@@ -629,7 +666,10 @@ function initializeScoreTracking() {
             // Check if this is valid typing (not repetitive or meaningless)
             if (isValidTyping(currentValue, pattern, currentLength, now, 'chat')) {
                 scores.chatTyping++;
-                updateScoreDisplay();
+                // Update fast display (without expensive similarity calculation)
+                updateScoreDisplayFast();
+                // Debounce expensive similarity calculation
+                debouncedUpdateScoreDisplay();
             }
             
             // Update pattern tracking
@@ -762,7 +802,8 @@ async function sendMessage() {
     
     // Track AI prompt (only if relevant)
     scores.aiPrompts++;
-    updateScoreDisplay();
+    // Use fast update - similarity doesn't change when sending prompt
+    updateScoreDisplayFast();
     
     // Add to conversation history
     conversationHistory.push({ role: 'user', content: message });
@@ -808,7 +849,7 @@ async function sendMessage() {
             
             // Store AI-generated text for similarity comparison
             aiGeneratedTexts.push(modelResponse);
-            // Update similarity when new AI text is added
+            // Update similarity when new AI text is added (full update needed)
             updateScoreDisplay();
         } else {
             // Try to get error details from response
@@ -1309,7 +1350,8 @@ askAiFeedbackBtn.addEventListener('click', async function(e) {
     
     // Track AI feedback request (only if validation passes)
     scores.aiFeedback++;
-    updateScoreDisplay();
+    // Use fast update - similarity doesn't change when requesting feedback
+    updateScoreDisplayFast();
     
     // Disable button during request
     askAiFeedbackBtn.disabled = true;
