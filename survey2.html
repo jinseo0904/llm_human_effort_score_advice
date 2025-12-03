@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survey Questions - Trust, Integrity, and Security</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="screen active">
+        <div class="screen-container">
+            <div class="screen-content survey-content">
+                <h1>Trust of LLM Writing Assistant System</h1>
+                <p class="survey-instructions"><strong>System refers to the LLM Writing Assistant which you just used to write the advice response. Consider your experience with the system and answer the following questions.</strong></p>
+                <form id="survey2Form">
+                    <div class="form-section">
+                        <div class="form-group">
+                            <label class="survey-item-label">The system is deceptive.</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="deceptive" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="deceptive" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="deceptive" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="deceptive" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="deceptive" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">The system behaves in an underhanded manner.</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="underhanded" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="underhanded" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="underhanded" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="underhanded" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="underhanded" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">I am suspicious of the system's intent, action, or output.</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="suspicious" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="suspicious" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="suspicious" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="suspicious" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="suspicious" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">I am wary of the system.</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="wary" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="wary" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="wary" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="wary" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="wary" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">The system's action will have a harmful or injurious outcome.</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="harmful" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="harmful" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="harmful" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="harmful" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="harmful" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">I am confident in the system.</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="confident" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="confident" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="confident" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="confident" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="confident" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">The system provides security.</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="security" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="security" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="security" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="security" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="security" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">The system has integrity.</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="integrity" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="integrity" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="integrity" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="integrity" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="integrity" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">The system is dependable.</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="dependable" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="dependable" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="dependable" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="dependable" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="dependable" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">The system is reliable.</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="reliable" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="reliable" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="reliable" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="reliable" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="reliable" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">I can trust the system.</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="trust" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="trust" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="trust" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="trust" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="trust" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">I am familiar with the system.</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="familiar" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="familiar" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="familiar" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="familiar" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="familiar" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="primary-btn">Next</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const survey2Form = document.getElementById('survey2Form');
+        
+        // Check if user came from survey1
+        if (!localStorage.getItem('surveyData')) {
+            window.location.href = 'survey1.html';
+        }
+        
+        survey2Form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collect survey 2 data
+            const formData = new FormData(survey2Form);
+            const survey2Data = {
+                deceptive: formData.get('deceptive'),
+                underhanded: formData.get('underhanded'),
+                suspicious: formData.get('suspicious'),
+                wary: formData.get('wary'),
+                harmful: formData.get('harmful'),
+                confident: formData.get('confident'),
+                security: formData.get('security'),
+                integrity: formData.get('integrity'),
+                dependable: formData.get('dependable'),
+                reliable: formData.get('reliable'),
+                trust: formData.get('trust'),
+                familiar: formData.get('familiar')
+            };
+            
+            // Store in localStorage
+            let surveyData = JSON.parse(localStorage.getItem('surveyData') || '{}');
+            surveyData.survey2 = survey2Data;
+            localStorage.setItem('surveyData', JSON.stringify(surveyData));
+            
+            // Navigate to survey3 page
+            window.location.href = 'survey3.html';
+        });
+    </script>
+</body>
+</html>
+

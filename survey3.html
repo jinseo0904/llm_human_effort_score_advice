@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survey Questions - LLM Dependency</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="screen active">
+        <div class="screen-container">
+            <div class="screen-content survey-content">
+                <h1>Survey Questions</h1>
+                <p class="survey-instructions">Thinking specifically about the large language model (LLM) you use most often (such as ChatGPT, DeepSeek, Gemini, Copilot, etc), please indicate how much you agree or disagree with each of the following statements. Use a scale from 1 (Extremely Disagree) to 5 (Extremely Agree).</p>
+                <form id="survey3Form">
+                    <div class="form-section">
+                        <div class="form-group">
+                            <label class="survey-item-label">Without it, I feel less confident when making decisions</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="less_confident_decisions" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="less_confident_decisions" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="less_confident_decisions" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="less_confident_decisions" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="less_confident_decisions" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">I use it sometimes without realizing how much time I spend immersed in it</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="time_immersed" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="time_immersed" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="time_immersed" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="time_immersed" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="time_immersed" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">I feel much more rewarded and pleased when completing tasks using it</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="more_rewarded" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="more_rewarded" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="more_rewarded" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="more_rewarded" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="more_rewarded" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">I turn to it for support in decisions even when I can make them myself with some effort</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="support_decisions" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="support_decisions" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="support_decisions" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="support_decisions" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="support_decisions" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">It's my go-to for assistance in decision-making</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="goto_decision_making" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="goto_decision_making" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="goto_decision_making" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="goto_decision_making" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="goto_decision_making" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">Making decisions without it feels somewhat uneasy</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="uneasy_without" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="uneasy_without" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="uneasy_without" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="uneasy_without" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="uneasy_without" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">I share details about my private life with it</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="share_private_life" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="share_private_life" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="share_private_life" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="share_private_life" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="share_private_life" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">I interact with it as if it were a genuine companion</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="genuine_companion" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="genuine_companion" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="genuine_companion" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="genuine_companion" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="genuine_companion" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">It helps me feel less alone when I need to talk to someone</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="less_alone_talk" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="less_alone_talk" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="less_alone_talk" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="less_alone_talk" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="less_alone_talk" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">It adds to my social life, making socializing more engaging and interesting</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="adds_social_life" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="adds_social_life" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="adds_social_life" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="adds_social_life" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="adds_social_life" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">I use it solely as a tool, not to express my feelings or expect it to understand me</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="solely_tool" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="solely_tool" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="solely_tool" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="solely_tool" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="solely_tool" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">It helps me feel less alone, reducing the need to talk to others</label>
+                            <div class="likert-scale">
+                                <label><input type="radio" name="less_alone_reduce_need" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                <label><input type="radio" name="less_alone_reduce_need" value="2"> <span>2<br>Disagree</span></label>
+                                <label><input type="radio" name="less_alone_reduce_need" value="3"> <span>3<br>Neutral</span></label>
+                                <label><input type="radio" name="less_alone_reduce_need" value="4"> <span>4<br>Agree</span></label>
+                                <label><input type="radio" name="less_alone_reduce_need" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="primary-btn">Next</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const survey3Form = document.getElementById('survey3Form');
+        
+        // Check if user came from survey2
+        if (!localStorage.getItem('surveyData')) {
+            window.location.href = 'survey2.html';
+        }
+        
+        survey3Form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collect survey 3 data
+            const formData = new FormData(survey3Form);
+            const survey3Data = {
+                less_confident_decisions: formData.get('less_confident_decisions'),
+                time_immersed: formData.get('time_immersed'),
+                more_rewarded: formData.get('more_rewarded'),
+                support_decisions: formData.get('support_decisions'),
+                goto_decision_making: formData.get('goto_decision_making'),
+                uneasy_without: formData.get('uneasy_without'),
+                share_private_life: formData.get('share_private_life'),
+                genuine_companion: formData.get('genuine_companion'),
+                less_alone_talk: formData.get('less_alone_talk'),
+                adds_social_life: formData.get('adds_social_life'),
+                solely_tool: formData.get('solely_tool'),
+                less_alone_reduce_need: formData.get('less_alone_reduce_need')
+            };
+            
+            // Store in localStorage
+            let surveyData = JSON.parse(localStorage.getItem('surveyData') || '{}');
+            surveyData.survey3 = survey3Data;
+            localStorage.setItem('surveyData', JSON.stringify(surveyData));
+            
+            // Navigate to demographics page
+            window.location.href = 'demographics.html';
+        });
+    </script>
+</body>
+</html>
+

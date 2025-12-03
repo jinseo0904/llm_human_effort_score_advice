@@ -1,0 +1,14 @@
+Thinking specifically about the large language model (LLM) you use most often (such as ChatGPT, DeepSeek, Gemini, Copilot, etc), please indicate how much you agree or disagree with each of the following statements.
+
+- Without it, I feel less confident when making decisions
+- I use it sometimes without realizing how much time I spend immersed in it
+- I feel much more rewarded and pleased when completing tasks using it
+- I turn to it for support in decisions even when I can make them myself with some effort
+- It's my go-to for assistance in decision-making
+- Making decisions without it feels somewhat uneasy
+- I share details about my private life with it
+- I interact with it as if it were a genuine companion
+- It helps me feel less alone when I need to talk to someone
+- It adds to my social life, making socializing more engaging and interesting
+- I use it solely as a tool, not to express my feelings or expect it to understand me
+- It helps me feel less alone, reducing the need to talk to others

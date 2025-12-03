@@ -1,0 +1,20 @@
+{
+    "eval1_financial": {
+        "responseTyping": 323,
+        "chatTyping": 145,
+        "aiPrompts": 3,
+        "aiFeedback": 0,
+        "draftSimilarity": 0.87,
+        "timeOnPage": 100
+    },
+    "eval2_health": {
+        "responseTyping": 3124,
+        "chatTyping": 231,
+        "aiPrompts": 5,
+        "aiFeedback": 4,
+        "draftSimilarity": 0.35,
+        "timeOnPage": 496
+    },
+    "eval3_professional": {
+    }
+}

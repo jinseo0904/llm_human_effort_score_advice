@@ -9,13 +9,27 @@ let userIDInput, continueBtn, testBtn, agreeBtn, disagreeBtn;
 let survey1Form, survey2Form, demographicsForm;
 let nextSurvey1Btn, nextSurvey2Btn, submitDemographicsBtn;
 
-// Main UI elements - initialized when DOM is ready
-let chatMessages, messageInput, sendBtn, clearBtn, testApiBtn;
-let advicePost, commentInput, commentSubmitBtn, askAiFeedbackBtn;
+const chatMessages = document.getElementById('chatMessages');
+const messageInput = document.getElementById('messageInput');
+const sendBtn = document.getElementById('sendBtn');
+const clearBtn = document.getElementById('clearBtn');
+const testApiBtn = document.getElementById('testApiBtn');
+const advicePost = document.getElementById('advicePost');
+const commentInput = document.getElementById('commentInput');
+const commentSubmitBtn = document.getElementById('commentSubmitBtn');
+const askAiFeedbackBtn = document.getElementById('askAiFeedbackBtn');
 
-// Human Effort Score tracking elements
-let situationScrollCount, chatScrollCount, responseTypingCount, chatTypingCount;
-let aiPromptCount, aiFeedbackCount, draftSimilarity, timeOnPage, hesScore, totalCount;
+// Human Effort Score tracking
+const situationScrollCount = document.getElementById('situationScrollCount');
+const chatScrollCount = document.getElementById('chatScrollCount');
+const responseTypingCount = document.getElementById('responseTypingCount');
+const chatTypingCount = document.getElementById('chatTypingCount');
+const aiPromptCount = document.getElementById('aiPromptCount');
+const aiFeedbackCount = document.getElementById('aiFeedbackCount');
+const draftSimilarity = document.getElementById('draftSimilarity');
+const timeOnPage = document.getElementById('timeOnPage');
+const hesScore = document.getElementById('hesScore');
+const totalCount = document.getElementById('totalCount');
 
 // Score tracking variables
 let scores = {
@@ -227,7 +241,6 @@ function formatTime(seconds) {
 
 // Calculate Human Effort Score (HES) using weighted sum
 function calculateHES() {
-    if (!commentInput) return 0;
     const draft = commentInput.value.trim();
     const similarity = calculateDraftSimilarity(draft);
     
@@ -254,47 +267,43 @@ function calculateHES() {
 
 // Update score display (without similarity calculation for performance)
 function updateScoreDisplayFast() {
-    if (situationScrollCount) situationScrollCount.textContent = scores.situationScroll;
-    if (chatScrollCount) chatScrollCount.textContent = scores.chatScroll;
-    if (responseTypingCount) responseTypingCount.textContent = scores.responseTyping;
-    if (chatTypingCount) chatTypingCount.textContent = scores.chatTyping;
-    if (aiPromptCount) aiPromptCount.textContent = scores.aiPrompts;
-    if (aiFeedbackCount) aiFeedbackCount.textContent = scores.aiFeedback;
+    situationScrollCount.textContent = scores.situationScroll;
+    chatScrollCount.textContent = scores.chatScroll;
+    responseTypingCount.textContent = scores.responseTyping;
+    chatTypingCount.textContent = scores.chatTyping;
+    aiPromptCount.textContent = scores.aiPrompts;
+    aiFeedbackCount.textContent = scores.aiFeedback;
     
     // Update time display
-    if (timeOnPage) timeOnPage.textContent = formatTime(scores.timeOnPageSeconds);
+    timeOnPage.textContent = formatTime(scores.timeOnPageSeconds);
     
     const total = scores.situationScroll + scores.chatScroll + scores.responseTyping + scores.chatTyping + scores.aiPrompts + scores.aiFeedback;
-    if (totalCount) totalCount.textContent = total;
+    totalCount.textContent = total;
 }
 
 // Update score display with similarity calculation (expensive)
 function updateScoreDisplay() {
-    if (situationScrollCount) situationScrollCount.textContent = scores.situationScroll;
-    if (chatScrollCount) chatScrollCount.textContent = scores.chatScroll;
-    if (responseTypingCount) responseTypingCount.textContent = scores.responseTyping;
-    if (chatTypingCount) chatTypingCount.textContent = scores.chatTyping;
-    if (aiPromptCount) aiPromptCount.textContent = scores.aiPrompts;
-    if (aiFeedbackCount) aiFeedbackCount.textContent = scores.aiFeedback;
+    situationScrollCount.textContent = scores.situationScroll;
+    chatScrollCount.textContent = scores.chatScroll;
+    responseTypingCount.textContent = scores.responseTyping;
+    chatTypingCount.textContent = scores.chatTyping;
+    aiPromptCount.textContent = scores.aiPrompts;
+    aiFeedbackCount.textContent = scores.aiFeedback;
     
     // Calculate and display draft similarity (expensive operation)
-    if (commentInput && draftSimilarity) {
-        const draft = commentInput.value.trim();
-        const similarity = calculateDraftSimilarity(draft);
-        draftSimilarity.textContent = similarity + '%';
-    }
+    const draft = commentInput.value.trim();
+    const similarity = calculateDraftSimilarity(draft);
+    draftSimilarity.textContent = similarity + '%';
     
     // Update time display
-    if (timeOnPage) timeOnPage.textContent = formatTime(scores.timeOnPageSeconds);
+    timeOnPage.textContent = formatTime(scores.timeOnPageSeconds);
     
     // Calculate and display HES
-    if (hesScore) {
-        const hes = calculateHES();
-        hesScore.textContent = hes;
-    }
+    const hes = calculateHES();
+    hesScore.textContent = hes;
     
     const total = scores.situationScroll + scores.chatScroll + scores.responseTyping + scores.chatTyping + scores.aiPrompts + scores.aiFeedback;
-    if (totalCount) totalCount.textContent = total;
+    totalCount.textContent = total;
 }
 
 // Debounced version of updateScoreDisplay for typing events
@@ -691,47 +700,34 @@ const MODEL_NAME = 'gemma3:27b';
 let conversationHistory = [];
 let currentAdvicePost = '';
 
-// Initialize main UI event listeners
-function initializeMainUIEventListeners() {
-    // Auto-resize textarea
-    if (messageInput) {
-        messageInput.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-        });
-    }
+// Auto-resize textarea
+messageInput.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
 
-    // Send message on button click
-    if (sendBtn) {
-        sendBtn.addEventListener('click', sendMessage);
-    }
+// Send message on button click
+sendBtn.addEventListener('click', sendMessage);
 
-    // Send message on Enter key (Shift+Enter for new line)
-    if (messageInput) {
-        messageInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
+// Send message on Enter key (Shift+Enter for new line)
+messageInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
     }
+});
 
-    // Clear chat
-    if (clearBtn) {
-        clearBtn.addEventListener('click', function() {
-            if (confirm('Are you sure you want to clear the chat?')) {
-                if (chatMessages) {
-                    chatMessages.innerHTML = '';
-                }
-                conversationHistory = [];
-                addMessage('assistant', getInitialGreeting());
-            }
-        });
+// Clear chat
+clearBtn.addEventListener('click', function() {
+    if (confirm('Are you sure you want to clear the chat?')) {
+        chatMessages.innerHTML = '';
+        conversationHistory = [];
+        addMessage('assistant', getInitialGreeting());
     }
+});
 
-    // Test Ollama API with gemma3:27b model
-    if (testApiBtn) {
-        testApiBtn.addEventListener('click', async function() {
+// Test Ollama API with gemma3:27b model
+testApiBtn.addEventListener('click', async function() {
     testApiBtn.disabled = true;
     addMessage('system', '🤖 Connecting to Ollama with gemma3:27b...');
     
@@ -779,173 +775,9 @@ function initializeMainUIEventListeners() {
     } catch (error) {
         addMessage('system', `❌ API Connection Failed\n\nError: ${error.message}\n\nCheck browser console for details`);
     } finally {
-        if (testApiBtn) {
-            testApiBtn.disabled = false;
-        }
+        testApiBtn.disabled = false;
     }
-    });
-    }
-    
-    // Handle comment submit - now navigates to survey instead of emailing
-    if (commentSubmitBtn) {
-        commentSubmitBtn.addEventListener('click', async function(e) {
-            e.preventDefault();
-            const draft = commentInput.value.trim();
-            
-            if (!draft) {
-                showNotification('⚠️ Please write a response before submitting.', 'warning');
-                return;
-            }
-            
-            // Show confirmation dialog
-            const confirmed = confirm(
-                'Are you sure you want to submit your response?\n\n' +
-                'This will:\n' +
-                '- Stop the timer\n' +
-                '- Move to the survey page\n\n' +
-                'Click OK to proceed or Cancel to continue editing.'
-            );
-            
-            if (!confirmed) {
-                return;
-            }
-            
-            // Stop the stopwatch
-            stopStopwatch();
-            
-            // Disable submit button to prevent double submission
-            commentSubmitBtn.disabled = true;
-            commentSubmitBtn.innerHTML = '<span>Submitting...</span>';
-            
-            // Store submission data for later (will be sent with survey)
-            window.pendingSubmissionData = collectSubmissionData();
-            
-            // Store in localStorage so it persists across page navigation
-            localStorage.setItem('pendingSubmissionData', JSON.stringify(window.pendingSubmissionData));
-            
-            // Navigate to first survey screen (separate page)
-            window.location.href = 'survey1.html';
-        });
-    }
-
-    // Handle Ask AI Feedback button
-    if (askAiFeedbackBtn) {
-        askAiFeedbackBtn.addEventListener('click', async function(e) {
-            e.preventDefault();
-            const draft = commentInput.value.trim();
-            
-            if (!draft) {
-                addMessage('system', 'Please write a draft in the text box before asking for feedback.');
-                showNotification('⚠️ Please write a draft before asking for feedback.', 'warning');
-                return;
-            }
-            
-            // Validate word count (must be more than 30 words)
-            const wordCount = countWords(draft);
-            if (wordCount <= 30) {
-                addMessage('system', `Your draft has ${wordCount} words. Please write at least 31 words before asking for feedback.`);
-                showNotification(`⚠️ Draft too short (${wordCount} words). Need at least 31 words for feedback.`, 'warning');
-                return;
-            }
-            
-            // Validate that draft is significantly different from last feedback draft (at least 10% different)
-            if (lastFeedbackDraft) {
-                const similarity = calculateTextSimilarity(draft, lastFeedbackDraft);
-                const difference = 100 - similarity;
-                
-                if (difference < 10) {
-                    addMessage('system', `Your draft is ${difference.toFixed(1)}% different from your last feedback request. Please make at least 10% changes before requesting feedback again.`);
-                    showNotification(`⚠️ Draft too similar to last feedback (${difference.toFixed(1)}% different). Need at least 10% changes.`, 'warning');
-                    return;
-                }
-            }
-            
-            // Track AI feedback request (only if validation passes)
-            scores.aiFeedback++;
-            // Use fast update - similarity doesn't change when requesting feedback
-            updateScoreDisplayFast();
-            
-            // Disable button during request
-            askAiFeedbackBtn.disabled = true;
-            const originalText = askAiFeedbackBtn.innerHTML;
-            askAiFeedbackBtn.innerHTML = '<span>Processing...</span>';
-            
-            // Add user message showing they're asking for feedback
-            addMessage('user', 'Please provide feedback on my draft.');
-            
-            // Show typing indicator
-            const typingIndicator = addTypingIndicator();
-            
-            try {
-                // Build feedback prompt
-                const feedbackPrompt = buildFeedbackPrompt(draft);
-                
-                // Determine the URL based on whether we're using the proxy or direct connection
-                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                const url = isLocalhost 
-                    ? `${OLLAMA_API_URL}/api/generate`
-                    : `${OLLAMA_API_URL}?endpoint=/api/generate`;
-                
-                const requestBody = {
-                    model: MODEL_NAME,
-                    prompt: feedbackPrompt,
-                    stream: false
-                };
-                
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    const modelResponse = data.response || 'I apologize, but I didn\'t receive a response. Please try again.';
-                    
-                    // Remove typing indicator
-                    removeTypingIndicator(typingIndicator);
-                    
-                    // Add assistant response
-                    addMessage('assistant', modelResponse);
-                    conversationHistory.push({ role: 'user', content: 'Please provide feedback on my draft.' });
-                    conversationHistory.push({ role: 'assistant', content: modelResponse });
-                    
-                    // Store AI-generated text for similarity comparison
-                    aiGeneratedTexts.push(modelResponse);
-                    // Store this draft as the last feedback draft
-                    lastFeedbackDraft = draft;
-                    // Update similarity when new AI text is added
-                    updateScoreDisplay();
-                } else {
-                    // Try to get error details from response
-                    let errorDetails = `Status: ${response.status} ${response.statusText}`;
-                    try {
-                        const errorData = await response.json();
-                        if (errorData.error || errorData.message) {
-                            errorDetails += `\n\nError: ${errorData.error || errorData.message}`;
-                        }
-                    } catch (e) {
-                        // Response wasn't JSON, that's okay
-                    }
-                    
-                    removeTypingIndicator(typingIndicator);
-                    addMessage('system', `❌ Failed to get AI feedback\n\n${errorDetails}`);
-                }
-            } catch (error) {
-                removeTypingIndicator(typingIndicator);
-                addMessage('system', `❌ Error: ${error.message}\n\nPlease check your connection and try again.`);
-                console.error('Error getting AI feedback:', error);
-            } finally {
-                if (askAiFeedbackBtn) {
-                    askAiFeedbackBtn.disabled = false;
-                    askAiFeedbackBtn.innerHTML = originalText;
-                }
-            }
-        });
-    }
-}
+});
 
 async function sendMessage() {
     const message = messageInput.value.trim();
@@ -1056,11 +888,6 @@ async function sendMessage() {
 }
 
 function addMessage(type, text) {
-    if (!chatMessages) {
-        console.error('chatMessages element not found');
-        return;
-    }
-    
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${type}`;
     
@@ -1251,11 +1078,6 @@ function parseMarkdown(text) {
 
 // Load advice post from text file
 async function loadAdvicePost(filename = 'sample1.txt') {
-    if (!advicePost) {
-        console.error('advicePost element not found');
-        return;
-    }
-    
     try {
         const response = await fetch(`Advice_Situations/${filename}`);
         if (!response.ok) {
@@ -1554,49 +1376,175 @@ function showScreen(screenName) {
 
 // Initialize main UI (called after consent or test mode)
 function initializeMainUI() {
-    console.log('initializeMainUI called');
-    
-    // First, make sure main UI elements are initialized
-    initializeMainUIElements();
-    
-    // Verify critical elements exist
-    if (!advicePost) {
-        console.error('advicePost element not found after initialization');
-        return;
-    }
-    if (!chatMessages) {
-        console.error('chatMessages element not found after initialization');
-        return;
-    }
-    
-    console.log('Main UI elements initialized successfully');
-    
-    // Initialize main UI event listeners
-    initializeMainUIEventListeners();
-    
     // Load advice post
-    loadAdvicePost().then(() => {
-        console.log('Advice post loaded');
-        // Add initial greeting after loading advice post
-        if (chatMessages) {
-            addMessage('assistant', getInitialGreeting());
-        }
-    }).catch(err => {
-        console.error('Failed to load advice post:', err);
-    });
-    
+    loadAdvicePost();
+    // Add initial greeting after loading advice post
+    addMessage('assistant', getInitialGreeting());
     // Initialize score tracking
     initializeScoreTracking();
     // Start stopwatch
     startStopwatch();
     // Initialize score display
     updateScoreDisplay();
-    if (messageInput) {
-        messageInput.focus();
+    messageInput.focus();
+}
+
+// Handle comment submit - now navigates to survey instead of emailing
+commentSubmitBtn.addEventListener('click', async function(e) {
+    e.preventDefault();
+    const draft = commentInput.value.trim();
+    
+    if (!draft) {
+        showNotification('⚠️ Please write a response before submitting.', 'warning');
+        return;
     }
     
-    console.log('Main UI initialization complete');
-}
+    // Show confirmation dialog
+    const confirmed = confirm(
+        'Are you sure you want to submit your response?\n\n' +
+        'This will:\n' +
+        '- Stop the timer\n' +
+        '- Move to the survey page\n\n' +
+        'Click OK to proceed or Cancel to continue editing.'
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    // Stop the stopwatch
+    stopStopwatch();
+    
+    // Disable submit button to prevent double submission
+    commentSubmitBtn.disabled = true;
+    commentSubmitBtn.innerHTML = '<span>Submitting...</span>';
+    
+    // Store submission data for later (will be sent with survey)
+    window.pendingSubmissionData = collectSubmissionData();
+    
+    // Navigate to first survey screen
+    showScreen('survey1');
+    
+    // Reset button state
+    setTimeout(() => {
+        commentSubmitBtn.disabled = false;
+        commentSubmitBtn.innerHTML = '<span>Submit</span>';
+    }, 500);
+});
+
+// Handle Ask AI Feedback button
+askAiFeedbackBtn.addEventListener('click', async function(e) {
+    e.preventDefault();
+    const draft = commentInput.value.trim();
+    
+    if (!draft) {
+        addMessage('system', 'Please write a draft in the text box before asking for feedback.');
+        showNotification('⚠️ Please write a draft before asking for feedback.', 'warning');
+        return;
+    }
+    
+    // Validate word count (must be more than 30 words)
+    const wordCount = countWords(draft);
+    if (wordCount <= 30) {
+        addMessage('system', `Your draft has ${wordCount} words. Please write at least 31 words before asking for feedback.`);
+        showNotification(`⚠️ Draft too short (${wordCount} words). Need at least 31 words for feedback.`, 'warning');
+        return;
+    }
+    
+    // Validate that draft is significantly different from last feedback draft (at least 10% different)
+    if (lastFeedbackDraft) {
+        const similarity = calculateTextSimilarity(draft, lastFeedbackDraft);
+        const difference = 100 - similarity;
+        
+        if (difference < 10) {
+            addMessage('system', `Your draft is ${difference.toFixed(1)}% different from your last feedback request. Please make at least 10% changes before requesting feedback again.`);
+            showNotification(`⚠️ Draft too similar to last feedback (${difference.toFixed(1)}% different). Need at least 10% changes.`, 'warning');
+            return;
+        }
+    }
+    
+    // Track AI feedback request (only if validation passes)
+    scores.aiFeedback++;
+    // Use fast update - similarity doesn't change when requesting feedback
+    updateScoreDisplayFast();
+    
+    // Disable button during request
+    askAiFeedbackBtn.disabled = true;
+    const originalText = askAiFeedbackBtn.innerHTML;
+    askAiFeedbackBtn.innerHTML = '<span>Processing...</span>';
+    
+    // Add user message showing they're asking for feedback
+    addMessage('user', 'Please provide feedback on my draft.');
+    
+    // Show typing indicator
+    const typingIndicator = addTypingIndicator();
+    
+    try {
+        // Build feedback prompt
+        const feedbackPrompt = buildFeedbackPrompt(draft);
+        
+        // Determine the URL based on whether we're using the proxy or direct connection
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const url = isLocalhost 
+            ? `${OLLAMA_API_URL}/api/generate`
+            : `${OLLAMA_API_URL}?endpoint=/api/generate`;
+        
+        const requestBody = {
+            model: MODEL_NAME,
+            prompt: feedbackPrompt,
+            stream: false
+        };
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody)
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const modelResponse = data.response || 'I apologize, but I didn\'t receive a response. Please try again.';
+            
+            // Remove typing indicator
+            removeTypingIndicator(typingIndicator);
+            
+            // Add assistant response
+            addMessage('assistant', modelResponse);
+            conversationHistory.push({ role: 'user', content: 'Please provide feedback on my draft.' });
+            conversationHistory.push({ role: 'assistant', content: modelResponse });
+            
+            // Store AI-generated text for similarity comparison
+            aiGeneratedTexts.push(modelResponse);
+            // Store this draft as the last feedback draft
+            lastFeedbackDraft = draft;
+            // Update similarity when new AI text is added
+            updateScoreDisplay();
+        } else {
+            // Try to get error details from response
+            let errorDetails = `Status: ${response.status} ${response.statusText}`;
+            try {
+                const errorData = await response.json();
+                if (errorData.error || errorData.message) {
+                    errorDetails += `\n\nError: ${errorData.error || errorData.message}`;
+                }
+            } catch (e) {
+                // Response wasn't JSON, that's okay
+            }
+            
+            removeTypingIndicator(typingIndicator);
+            addMessage('system', `❌ Failed to get AI feedback\n\n${errorDetails}`);
+        }
+    } catch (error) {
+        removeTypingIndicator(typingIndicator);
+        addMessage('system', `❌ Error: ${error.message}\n\nPlease check your connection and try again.`);
+        console.error('Error getting AI feedback:', error);
+    } finally {
+        askAiFeedbackBtn.disabled = false;
+        askAiFeedbackBtn.innerHTML = originalText;
+    }
+});
 
 function buildFeedbackPrompt(draft) {
     const systemPrompt = buildSystemPrompt();
@@ -1632,41 +1580,6 @@ window.surveyData = {};
 
 // Survey form handlers are now initialized in initializeEventListeners() function
 
-// Initialize main UI elements (for main.html page)
-function initializeMainUIElements() {
-    chatMessages = document.getElementById('chatMessages');
-    messageInput = document.getElementById('messageInput');
-    sendBtn = document.getElementById('sendBtn');
-    clearBtn = document.getElementById('clearBtn');
-    testApiBtn = document.getElementById('testApiBtn');
-    advicePost = document.getElementById('advicePost');
-    commentInput = document.getElementById('commentInput');
-    commentSubmitBtn = document.getElementById('commentSubmitBtn');
-    askAiFeedbackBtn = document.getElementById('askAiFeedbackBtn');
-    
-    // Human Effort Score tracking elements
-    situationScrollCount = document.getElementById('situationScrollCount');
-    chatScrollCount = document.getElementById('chatScrollCount');
-    responseTypingCount = document.getElementById('responseTypingCount');
-    chatTypingCount = document.getElementById('chatTypingCount');
-    aiPromptCount = document.getElementById('aiPromptCount');
-    aiFeedbackCount = document.getElementById('aiFeedbackCount');
-    draftSimilarity = document.getElementById('draftSimilarity');
-    timeOnPage = document.getElementById('timeOnPage');
-    hesScore = document.getElementById('hesScore');
-    totalCount = document.getElementById('totalCount');
-    
-    // Debug: log which elements were found
-    console.log('Main UI elements initialized:', {
-        advicePost: !!advicePost,
-        chatMessages: !!chatMessages,
-        messageInput: !!messageInput,
-        commentInput: !!commentInput,
-        hesScore: !!hesScore,
-        timeOnPage: !!timeOnPage
-    });
-}
-
 // Initialize DOM elements and event listeners
 function initializeDOMElements() {
     useridScreen = document.getElementById('useridScreen');
@@ -1687,17 +1600,10 @@ function initializeDOMElements() {
     nextSurvey2Btn = document.getElementById('nextSurvey2Btn');
     submitDemographicsBtn = document.getElementById('submitDemographicsBtn');
     
-    // Initialize main UI elements if on main.html
-    initializeMainUIElements();
-    
-    // Verify elements exist (only log errors if we're on a page that should have them)
-    // These screens only exist on pages with overlays, not on separate HTML pages
-    const isSeparatePage = !document.getElementById('useridScreen') && !document.getElementById('survey1Screen');
-    if (!isSeparatePage) {
-        if (!survey1Screen) console.error('survey1Screen element not found!');
-        if (!survey2Screen) console.error('survey2Screen element not found!');
-        if (!demographicsScreen) console.error('demographicsScreen element not found!');
-    }
+    // Verify elements exist
+    if (!survey1Screen) console.error('survey1Screen element not found!');
+    if (!survey2Screen) console.error('survey2Screen element not found!');
+    if (!demographicsScreen) console.error('demographicsScreen element not found!');
     
     // Initialize event listeners after elements are loaded
     initializeEventListeners();
@@ -1863,31 +1769,25 @@ function initializeEventListeners() {
     }
 }
 
-// Initialize as early as possible (only if we're on a page with screen overlays)
-// For main.html, we'll initialize via initializeMainUI() instead
-if (document.getElementById('useridScreen') || document.getElementById('survey1Screen')) {
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeDOMElements);
-    } else {
-        // DOM is already ready
-        initializeDOMElements();
-    }
+// Initialize as early as possible
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeDOMElements);
+} else {
+    // DOM is already ready
+    initializeDOMElements();
 }
 
-// Focus on input on load (only if on a page with these elements)
+// Focus on input on load
 window.addEventListener('load', async () => {
     // Make sure elements are initialized
-    if (!useridScreen && document.getElementById('userIDInput')) {
+    if (!useridScreen) {
         initializeDOMElements();
     }
     
-    // Only show userID screen if we're on a page that has it (like index.html)
-    // For main.html, the main screen should already be visible
-    if (useridScreen && document.getElementById('userIDInput')) {
-        showScreen('userid');
-        if (userIDInput) {
-            userIDInput.focus();
-        }
+    // Start with userID screen
+    showScreen('userid');
+    if (userIDInput) {
+        userIDInput.focus();
     }
 });
 

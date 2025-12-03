@@ -5,95 +5,701 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Survey Questions - Advice Response Interface</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .survey-layout {
+            display: flex;
+            gap: 40px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        
+        .eval-content-pane {
+            flex: 0 0 55%;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            height: 85vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        .eval-content-pane::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .eval-content-pane::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .eval-content-pane::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        .eval-content-pane::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        .eval-content-pane h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .eval-content-pane h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+        
+        .eval-content-pane p {
+            line-height: 1.7;
+            color: #555;
+            margin-bottom: 16px;
+            white-space: pre-wrap;
+            font-size: 16px;
+        }
+        
+        /* HES Metrics Display */
+        .hes-metrics-display {
+            margin-top: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+        }
+        
+        .hes-metrics-display h4 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .hes-metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .hes-metric-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .hes-metric-label {
+            font-size: 15px;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .hes-metric-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .hes-total-score {
+            margin-top: 16px;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .hes-total-score-label {
+            font-size: 16px;
+            color: white;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .hes-total-score-value {
+            font-size: 34px;
+            color: white;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .survey-questions-pane {
+            flex: 0 0 40%;
+            min-width: 0;
+            height: 85vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 10px;
+        }
+        
+        .survey-questions-pane::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .survey-questions-pane::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .survey-questions-pane::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        .survey-questions-pane::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* Make form groups more compact */
+        .survey-questions-pane .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .survey-questions-pane .survey-item-label {
+            font-size: 16px;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        
+        /* Make Likert scale more compact */
+        .survey-questions-pane .likert-scale {
+            gap: 6px;
+            flex-wrap: nowrap;
+            padding: 10px;
+        }
+        
+        .survey-questions-pane .likert-scale label {
+            flex: 1;
+            min-width: 0;
+            padding: 6px 2px;
+        }
+        
+        .survey-questions-pane .likert-scale input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            margin-bottom: 4px;
+        }
+        
+        .survey-questions-pane .likert-scale span {
+            font-size: 12px;
+            line-height: 1.2;
+            padding: 2px;
+        }
+        
+        /* Reduce spacing in form section */
+        .survey-questions-pane .form-section {
+            padding: 0;
+        }
+        
+        /* Override screen-content and screen-container max-width for survey pages */
+        .screen-container {
+            max-width: none !important;
+            width: 100% !important;
+        }
+        
+        .screen-content.survey-content {
+            max-width: 80vw !important;
+            width: 80% !important;
+        }
+        
+        /* Ensure the layout uses full available width */
+        .survey-layout {
+            max-width: 100% !important;
+        }
+        
+        @media (max-width: 1200px) {
+            .survey-layout {
+                flex-direction: column;
+            }
+            
+            .eval-content-pane {
+                max-height: 400px;
+                flex: 1;
+            }
+            
+            .survey-content {
+                max-width: 95vw !important;
+                width: 95% !important;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="screen active">
         <div class="screen-container">
-            <div class="screen-content survey-content">
-                <h1>Survey Questions</h1>
-                <p class="survey-instructions">Please rate how much you agree or disagree with each statement. Use a scale from 1 (Extremely Disagree) to 5 (Extremely Agree).</p>
-                <form id="survey1Form">
-                    <div class="form-section">
-                        <div class="form-group">
-                            <label class="survey-item-label">I felt heard and understood by the author of this advice</label>
-                            <div class="likert-scale">
-                                <label><input type="radio" name="heard_understood" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
-                                <label><input type="radio" name="heard_understood" value="2"> <span>2<br>Disagree</span></label>
-                                <label><input type="radio" name="heard_understood" value="3"> <span>3<br>Neutral</span></label>
-                                <label><input type="radio" name="heard_understood" value="4"> <span>4<br>Agree</span></label>
-                                <label><input type="radio" name="heard_understood" value="5"> <span>5<br>Extremely<br>Agree</span></label>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="survey-item-label">I felt the author put my best interests first when drafting this advice</label>
-                            <div class="likert-scale">
-                                <label><input type="radio" name="best_interests" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
-                                <label><input type="radio" name="best_interests" value="2"> <span>2<br>Disagree</span></label>
-                                <label><input type="radio" name="best_interests" value="3"> <span>3<br>Neutral</span></label>
-                                <label><input type="radio" name="best_interests" value="4"> <span>4<br>Agree</span></label>
-                                <label><input type="radio" name="best_interests" value="5"> <span>5<br>Extremely<br>Agree</span></label>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="survey-item-label">I felt the author saw me as a person, not just someone who needs help.</label>
-                            <div class="likert-scale">
-                                <label><input type="radio" name="saw_as_person" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
-                                <label><input type="radio" name="saw_as_person" value="2"> <span>2<br>Disagree</span></label>
-                                <label><input type="radio" name="saw_as_person" value="3"> <span>3<br>Neutral</span></label>
-                                <label><input type="radio" name="saw_as_person" value="4"> <span>4<br>Agree</span></label>
-                                <label><input type="radio" name="saw_as_person" value="5"> <span>5<br>Extremely<br>Agree</span></label>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="survey-item-label">I felt the author understood what is important to me in my life.</label>
-                            <div class="likert-scale">
-                                <label><input type="radio" name="understood_important" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
-                                <label><input type="radio" name="understood_important" value="2"> <span>2<br>Disagree</span></label>
-                                <label><input type="radio" name="understood_important" value="3"> <span>3<br>Neutral</span></label>
-                                <label><input type="radio" name="understood_important" value="4"> <span>4<br>Agree</span></label>
-                                <label><input type="radio" name="understood_important" value="5"> <span>5<br>Extremely<br>Agree</span></label>
-                            </div>
+            <div class="screen-content survey-content" style="max-width: 80vw; width: 80%;">
+                <h1 style="margin-bottom: 12px; font-size: 30px;">Evaluating Other Authors' Responses</h1>
+            <p class="survey-instructions" style="margin-bottom: 20px; font-size: 16px;">Another author has written an advice response to a different challenging situation, presented below. Please read both the situation and the advice, then rate how much you agree or disagree with each statement.<br>Use a scale from 1 (Extremely Disagree) to 5 (Extremely Agree).</p>
+                
+                <div class="survey-layout">
+                    <!-- Left Pane: Situation and Advice -->
+                    <div class="eval-content-pane">
+                        <div id="evalContent">
+                            <p>Loading situation and advice...</p>
                         </div>
                     </div>
+                    
+                    <!-- Right Pane: Survey Questions -->
+                    <div class="survey-questions-pane">
+                        <form id="survey1Form">
+                            <div class="form-section">
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <p style="font-weight: 600; margin-bottom: 20px; color: #333; font-size: 16px;">If you were the original poster of the situation, you would...</p>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="survey-item-label">feel heard and understood by the author of this advice</label>
+                                    <div class="likert-scale">
+                                        <label><input type="radio" name="heard_understood" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                        <label><input type="radio" name="heard_understood" value="2"> <span>2<br>Disagree</span></label>
+                                        <label><input type="radio" name="heard_understood" value="3"> <span>3<br>Neutral</span></label>
+                                        <label><input type="radio" name="heard_understood" value="4"> <span>4<br>Agree</span></label>
+                                        <label><input type="radio" name="heard_understood" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                                    </div>
+                                </div>
 
-                    <div class="button-group">
-                        <button type="submit" class="primary-btn">Next</button>
+                                <div class="form-group">
+                                    <label class="survey-item-label">feel the author put my best interests first when drafting this advice</label>
+                                    <div class="likert-scale">
+                                        <label><input type="radio" name="best_interests" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                        <label><input type="radio" name="best_interests" value="2"> <span>2<br>Disagree</span></label>
+                                        <label><input type="radio" name="best_interests" value="3"> <span>3<br>Neutral</span></label>
+                                        <label><input type="radio" name="best_interests" value="4"> <span>4<br>Agree</span></label>
+                                        <label><input type="radio" name="best_interests" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="survey-item-label">feel the author saw me as a person, not just someone who needs help.</label>
+                                    <div class="likert-scale">
+                                        <label><input type="radio" name="saw_as_person" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                        <label><input type="radio" name="saw_as_person" value="2"> <span>2<br>Disagree</span></label>
+                                        <label><input type="radio" name="saw_as_person" value="3"> <span>3<br>Neutral</span></label>
+                                        <label><input type="radio" name="saw_as_person" value="4"> <span>4<br>Agree</span></label>
+                                        <label><input type="radio" name="saw_as_person" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="survey-item-label">feel the author understood what is important to me in my life.</label>
+                                    <div class="likert-scale">
+                                        <label><input type="radio" name="understood_important" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                        <label><input type="radio" name="understood_important" value="2"> <span>2<br>Disagree</span></label>
+                                        <label><input type="radio" name="understood_important" value="3"> <span>3<br>Neutral</span></label>
+                                        <label><input type="radio" name="understood_important" value="4"> <span>4<br>Agree</span></label>
+                                        <label><input type="radio" name="understood_important" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="survey-item-label">feel the response represents the author's authentic voice.</label>
+                                    <div class="likert-scale">
+                                        <label><input type="radio" name="authentic_voice" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                        <label><input type="radio" name="authentic_voice" value="2"> <span>2<br>Disagree</span></label>
+                                        <label><input type="radio" name="authentic_voice" value="3"> <span>3<br>Neutral</span></label>
+                                        <label><input type="radio" name="authentic_voice" value="4"> <span>4<br>Agree</span></label>
+                                        <label><input type="radio" name="authentic_voice" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group" style="margin-top: 30px; padding-top: 30px; border-top: 2px solid #e0e0e0;">
+                                    <p style="font-weight: 600; margin-bottom: 20px; color: #333; font-size: 16px;">Given the situation and the response above, you believe that the author...</p>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="survey-item-label">can tell how people are feeling by listening to the tone of their voice</label>
+                                    <div class="likert-scale">
+                                        <label><input type="radio" name="tone_feelings" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                        <label><input type="radio" name="tone_feelings" value="2"> <span>2<br>Disagree</span></label>
+                                        <label><input type="radio" name="tone_feelings" value="3"> <span>3<br>Neutral</span></label>
+                                        <label><input type="radio" name="tone_feelings" value="4"> <span>4<br>Agree</span></label>
+                                        <label><input type="radio" name="tone_feelings" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="survey-item-label">can recognize the emotions people are experiencing by looking at their facial expressions</label>
+                                    <div class="likert-scale">
+                                        <label><input type="radio" name="facial_expressions" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                        <label><input type="radio" name="facial_expressions" value="2"> <span>2<br>Disagree</span></label>
+                                        <label><input type="radio" name="facial_expressions" value="3"> <span>3<br>Neutral</span></label>
+                                        <label><input type="radio" name="facial_expressions" value="4"> <span>4<br>Agree</span></label>
+                                        <label><input type="radio" name="facial_expressions" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="survey-item-label">arranges events others enjoy</label>
+                                    <div class="likert-scale">
+                                        <label><input type="radio" name="arranges_events" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                        <label><input type="radio" name="arranges_events" value="2"> <span>2<br>Disagree</span></label>
+                                        <label><input type="radio" name="arranges_events" value="3"> <span>3<br>Neutral</span></label>
+                                        <label><input type="radio" name="arranges_events" value="4"> <span>4<br>Agree</span></label>
+                                        <label><input type="radio" name="arranges_events" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="survey-item-label">helps other people feel better when they are down</label>
+                                    <div class="likert-scale">
+                                        <label><input type="radio" name="helps_others" value="1" required> <span>1<br>Extremely<br>Disagree</span></label>
+                                        <label><input type="radio" name="helps_others" value="2"> <span>2<br>Disagree</span></label>
+                                        <label><input type="radio" name="helps_others" value="3"> <span>3<br>Neutral</span></label>
+                                        <label><input type="radio" name="helps_others" value="4"> <span>4<br>Agree</span></label>
+                                        <label><input type="radio" name="helps_others" value="5"> <span>5<br>Extremely<br>Agree</span></label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="button-group">
+                                <button type="submit" class="primary-btn">Next</button>
+                            </div>
+                        </form>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
     
     <script>
         const survey1Form = document.getElementById('survey1Form');
+        const evalContent = document.getElementById('evalContent');
         
-        // Check if user came from main page
-        if (!localStorage.getItem('pendingSubmissionData')) {
-            window.location.href = 'index.html';
+        // Eval files
+        const evalFiles = ['eval1_financial.txt', 'eval2_health.txt', 'eval3_professional.txt'];
+        
+        // Initialize eval order if not already set
+        function initializeEvalOrder() {
+            let evalOrder = localStorage.getItem('evalOrder');
+            if (!evalOrder) {
+                // Randomize the order
+                const shuffled = [...evalFiles].sort(() => Math.random() - 0.5);
+                localStorage.setItem('evalOrder', JSON.stringify(shuffled));
+                localStorage.setItem('currentEvalIndex', '0');
+                console.log('Initialized new eval order:', shuffled);
+                return shuffled;
+            }
+            
+            try {
+                const parsed = JSON.parse(evalOrder);
+                // Validate that all three evals are present
+                const hasAllEvals = evalFiles.every(file => parsed.includes(file));
+                if (!hasAllEvals || parsed.length !== evalFiles.length) {
+                    console.warn('Eval order is invalid, reinitializing');
+                    const shuffled = [...evalFiles].sort(() => Math.random() - 0.5);
+                    localStorage.setItem('evalOrder', JSON.stringify(shuffled));
+                    localStorage.setItem('currentEvalIndex', '0');
+                    return shuffled;
+                }
+                return parsed;
+            } catch (e) {
+                console.error('Error parsing evalOrder, reinitializing:', e);
+                const shuffled = [...evalFiles].sort(() => Math.random() - 0.5);
+                localStorage.setItem('evalOrder', JSON.stringify(shuffled));
+                localStorage.setItem('currentEvalIndex', '0');
+                return shuffled;
+            }
         }
+        
+        // Get current eval index
+        function getCurrentEvalIndex() {
+            const index = localStorage.getItem('currentEvalIndex');
+            return index ? parseInt(index) : 0;
+        }
+        
+        // Get current eval file
+        function getCurrentEvalFile() {
+            const evalOrder = initializeEvalOrder();
+            const currentIndex = getCurrentEvalIndex();
+            return evalOrder[currentIndex];
+        }
+        
+        // HES weights (matching script.js)
+        const hesWeights = {
+            situationScroll: 0.1,
+            chatScroll: 0.1,
+            responseTyping: 2,
+            chatTyping: 1,
+            aiPrompts: 1,
+            aiFeedback: 1,
+            draftSimilarity: -2,
+            timeOnPage: 0.1
+        };
+        
+        // Calculate HES score from parameters
+        function calculateHES(params) {
+            let hes = 0;
+            
+            // Positive contributions (effort)
+            hes += (params.situationScroll || 0) * hesWeights.situationScroll;
+            hes += (params.chatScroll || 0) * hesWeights.chatScroll;
+            hes += (params.responseTyping || 0) * hesWeights.responseTyping;
+            hes += (params.chatTyping || 0) * hesWeights.chatTyping;
+            
+            // AI assistance contributions
+            hes += (params.aiPrompts || 0) * hesWeights.aiPrompts;
+            hes += (params.aiFeedback || 0) * hesWeights.aiFeedback;
+            
+            // Draft similarity (negative weight - copying AI text reduces effort)
+            // params.draftSimilarity is a decimal (0-1), convert to percentage
+            const similarityPercent = (params.draftSimilarity || 0) * 100;
+            hes += similarityPercent * hesWeights.draftSimilarity;
+            
+            // Time contribution
+            hes += (params.timeOnPage || 0) * hesWeights.timeOnPage;
+            
+            // Ensure score doesn't go below 0
+            return Math.max(0, Math.round(hes));
+        }
+        
+        // Format time as MM:SS
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // Load and display eval content
+        async function loadEvalContent(filename) {
+            try {
+                const response = await fetch(`Advice_Situations/${filename}`);
+                if (!response.ok) {
+                    throw new Error(`Failed to load file: ${response.statusText}`);
+                }
+                const text = await response.text();
+                
+                // Parse the content
+                const situationMatch = text.match(/Situation:\s*(.*?)(?=Anonymous Author's Advice:|$)/s);
+                const adviceMatch = text.match(/Anonymous Author's Advice:\s*(.*?)$/s);
+                
+                const situation = situationMatch ? situationMatch[1].trim() : '';
+                const advice = adviceMatch ? adviceMatch[1].trim() : '';
+                
+                // Determine eval key (eval1_financial, eval2_health, or eval3_professional)
+                const evalKey = filename.replace('.txt', '');
+                
+                // Load HES parameters
+                let hesMetricsHTML = '';
+                if (evalKey === 'eval1_financial' || evalKey === 'eval2_health') {
+                    try {
+                        const hesResponse = await fetch('Advice_Situations/eval_hes_parameters.json');
+                        if (hesResponse.ok) {
+                            const hesData = await hesResponse.json();
+                            const params = hesData[evalKey];
+                            
+                            if (params) {
+                                const hesScore = calculateHES(params);
+                                const similarityPercent = Math.round((params.draftSimilarity || 0) * 100);
+                                
+                                hesMetricsHTML = `
+                                    <div class="hes-metrics-display">
+                                        <h4>Human Effort Score (HES) Metrics</h4>
+                                        <div class="hes-metrics-grid">
+                                            <div class="hes-metric-item">
+                                                <span class="hes-metric-label">Response Typing</span>
+                                                <span class="hes-metric-value">${params.responseTyping || 0}</span>
+                                            </div>
+                                            <div class="hes-metric-item">
+                                                <span class="hes-metric-label">Chat Typing</span>
+                                                <span class="hes-metric-value">${params.chatTyping || 0}</span>
+                                            </div>
+                                            <div class="hes-metric-item">
+                                                <span class="hes-metric-label">AI Prompts</span>
+                                                <span class="hes-metric-value">${params.aiPrompts || 0}</span>
+                                            </div>
+                                            <div class="hes-metric-item">
+                                                <span class="hes-metric-label">AI Feedback</span>
+                                                <span class="hes-metric-value">${params.aiFeedback || 0}</span>
+                                            </div>
+                                            <div class="hes-metric-item">
+                                                <span class="hes-metric-label">Draft Similarity</span>
+                                                <span class="hes-metric-value">${similarityPercent}%</span>
+                                            </div>
+                                            <div class="hes-metric-item">
+                                                <span class="hes-metric-label">Time on Page</span>
+                                                <span class="hes-metric-value">${formatTime(params.timeOnPage || 0)}</span>
+                                            </div>
+                                        </div>
+                                        <div class="hes-total-score">
+                                            <div class="hes-total-score-label">Total HES Score</div>
+                                            <div class="hes-total-score-value">${hesScore}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        }
+                    } catch (hesError) {
+                        console.error('Error loading HES parameters:', hesError);
+                    }
+                }
+                
+                // Get eval order and current index for progress display
+                const evalOrder = JSON.parse(localStorage.getItem('evalOrder'));
+                const currentIndex = getCurrentEvalIndex();
+                const currentEvalName = evalOrder[currentIndex];
+                const progressText = `Evaluation ${currentIndex + 1} of ${evalOrder.length}`;
+                
+                // Store which eval is being shown
+                localStorage.setItem('currentEval', currentEvalName);
+                console.log(`Loaded eval ${currentIndex + 1}/${evalOrder.length}: ${currentEvalName}`);
+                
+                // Display the content with progress indicator
+                evalContent.innerHTML = `
+                    <div style="margin-bottom: 20px; padding: 12px; background: #667eea; color: white; border-radius: 8px; text-align: center; font-weight: 600; font-size: 18px;">
+                        ${progressText}
+                    </div>
+                    <h2>Situation</h2>
+                    <p>${situation.replace(/\n/g, '<br>')}</p>
+                    <h3>Anonymous Author's Advice</h3>
+                    <p>${advice.replace(/\n/g, '<br>')}</p>
+                    ${hesMetricsHTML}
+                `;
+                
+            } catch (error) {
+                console.error('Error loading eval content:', error);
+                evalContent.innerHTML = `<p class="error-text">Error loading situation and advice: ${error.message}</p>`;
+            }
+        }
+        
+        // Check if user came from main page (has pending submission data)
+        const pendingSubmissionData = localStorage.getItem('pendingSubmissionData');
+        if (!pendingSubmissionData) {
+            // If no pending submission, redirect to main page
+            window.location.href = 'main.html';
+        }
+        
+        // Check if this is a fresh start (coming from main.html) or a continuation (page reload for next eval)
+        // If survey1 data doesn't exist yet, this is a fresh start - reset eval tracking
+        const existingSurveyData = JSON.parse(localStorage.getItem('surveyData') || '{}');
+        const isFreshStart = !existingSurveyData.survey1 || Object.keys(existingSurveyData.survey1).length === 0;
+        
+        if (isFreshStart) {
+            console.log('Fresh start detected - resetting eval tracking');
+            localStorage.removeItem('evalOrder');
+            localStorage.removeItem('currentEvalIndex');
+            localStorage.removeItem('currentEval');
+        }
+        
+        // Initialize eval order on page load (this ensures it's set even if page reloads)
+        const evalOrder = initializeEvalOrder();
+        const currentIndex = getCurrentEvalIndex();
+        console.log(`Page loaded - Eval order: ${JSON.stringify(evalOrder)}, Current index: ${currentIndex}`);
+        console.log(`Eval order length: ${evalOrder.length}, Should be 3`);
+        
+        // Ensure currentEvalIndex is valid
+        if (currentIndex >= evalOrder.length) {
+            console.warn('Current index out of bounds, resetting to 0');
+            localStorage.setItem('currentEvalIndex', '0');
+        }
+        
+        // Final validation: ensure evalOrder has exactly 3 evals
+        if (evalOrder.length !== 3) {
+            console.error(`CRITICAL: Eval order has ${evalOrder.length} evals, expected 3. Reinitializing...`);
+            localStorage.removeItem('evalOrder');
+            localStorage.removeItem('currentEvalIndex');
+            const freshEvalOrder = initializeEvalOrder();
+            console.log(`Reinitialized eval order: ${JSON.stringify(freshEvalOrder)}`);
+        }
+        
+        // Load the current eval
+        const currentEvalFile = getCurrentEvalFile();
+        console.log(`Loading eval file: ${currentEvalFile}`);
+        loadEvalContent(currentEvalFile);
         
         survey1Form.addEventListener('submit', function(e) {
             e.preventDefault();
             
             // Collect survey 1 data
             const formData = new FormData(survey1Form);
+            const currentEval = localStorage.getItem('currentEval');
+            const currentIndex = getCurrentEvalIndex();
+            const evalOrder = JSON.parse(localStorage.getItem('evalOrder'));
+            
+            console.log(`Submitting eval ${currentIndex + 1}/${evalOrder.length}: ${currentEval}`);
+            
+            // If currentEval is not set, try to get it from evalOrder
+            const evalToUse = currentEval || evalOrder[currentIndex];
+            
+            if (!evalToUse) {
+                console.error('Could not determine current eval!');
+                alert('Error: Could not determine which evaluation you are completing. Please try again.');
+                return;
+            }
+            
             const survey1Data = {
                 heard_understood: formData.get('heard_understood'),
                 best_interests: formData.get('best_interests'),
                 saw_as_person: formData.get('saw_as_person'),
-                understood_important: formData.get('understood_important')
+                understood_important: formData.get('understood_important'),
+                authentic_voice: formData.get('authentic_voice'),
+                tone_feelings: formData.get('tone_feelings'),
+                facial_expressions: formData.get('facial_expressions'),
+                arranges_events: formData.get('arranges_events'),
+                helps_others: formData.get('helps_others')
             };
             
-            // Store in localStorage
+            // Store in localStorage with eval identifier
             let surveyData = JSON.parse(localStorage.getItem('surveyData') || '{}');
-            surveyData.survey1 = survey1Data;
+            if (!surveyData.survey1) {
+                surveyData.survey1 = {};
+            }
+            surveyData.survey1[evalToUse] = survey1Data;
             localStorage.setItem('surveyData', JSON.stringify(surveyData));
             
-            // Navigate to survey 2
-            window.location.href = 'survey2.html';
+            // Check if there are more evals to show
+            const nextIndex = currentIndex + 1;
+            
+            console.log(`Current index: ${currentIndex}, Next index: ${nextIndex}, Total evals: ${evalOrder.length}`);
+            console.log(`Eval order: ${JSON.stringify(evalOrder)}`);
+            console.log(`Survey data so far: ${JSON.stringify(surveyData.survey1)}`);
+            
+            // Validate that evalOrder has all three evals
+            if (evalOrder.length !== 3) {
+                console.error(`Invalid evalOrder length: ${evalOrder.length}, expected 3`);
+                alert('Error: Evaluation order is invalid. Please refresh the page and try again.');
+                return;
+            }
+            
+            if (nextIndex < evalOrder.length) {
+                // Move to next eval
+                localStorage.setItem('currentEvalIndex', nextIndex.toString());
+                console.log(`Moving to next eval (${nextIndex + 1}/${evalOrder.length}): ${evalOrder[nextIndex]}`);
+                // Reload the page to show next eval
+                window.location.reload();
+            } else {
+                // Verify all evals have been completed
+                const completedEvals = Object.keys(surveyData.survey1 || {});
+                const allEvalsCompleted = evalOrder.every(eval => completedEvals.includes(eval));
+                
+                if (!allEvalsCompleted) {
+                    console.error(`Not all evals completed! Completed: ${completedEvals}, Expected: ${evalOrder}`);
+                    alert('Error: Not all evaluations have been completed. Please complete all evaluations before proceeding.');
+                    // Reset to first incomplete eval
+                    const firstIncomplete = evalOrder.findIndex(eval => !completedEvals.includes(eval));
+                    if (firstIncomplete >= 0) {
+                        localStorage.setItem('currentEvalIndex', firstIncomplete.toString());
+                        window.location.reload();
+                    }
+                    return;
+                }
+                
+                // All evals completed, navigate to survey 2
+                console.log('All evals completed, moving to survey2');
+                localStorage.removeItem('currentEvalIndex');
+                localStorage.removeItem('currentEval');
+                window.location.href = 'survey2.html';
+            }
         });
     </script>
 </body>

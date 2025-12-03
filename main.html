@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advice Response Interface</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Main Screen -->
+    <div id="mainScreen" class="screen active">
+        <div class="container">
+            <div class="main-layout">
+                <!-- Left Pane: Advice Post and Comment Section -->
+                <div class="left-pane">
+                    <!-- Advice Post Section -->
+                    <div class="advice-post-section">
+                        <div class="section-header">
+                            <h2>Advice Post</h2>
+                        </div>
+                        <div class="advice-post-content" id="advicePost">
+                            <p>Loading advice post...</p>
+                        </div>
+                    </div>
+
+                    <!-- Comment Section -->
+                    <div class="comment-section">
+                        <div class="section-header">
+                            <h2>Your Response</h2>
+                        </div>
+                        <div class="comment-input-container">
+                            <textarea id="commentInput" class="comment-input" placeholder="Write your advice response here (minimum 30 words)..." rows="10"></textarea>
+                            <div class="word-count-container">
+                                <span id="wordCount" class="word-count" style="color: #dc3545;">0 words</span>
+                            </div>
+                            <div class="comment-buttons">
+                                <button id="askAiFeedbackBtn" class="ask-ai-feedback-btn">Ask AI for Feedback</button>
+                                <button id="commentSubmitBtn" class="comment-submit-btn">Submit Response</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Middle Pane: AI Chat -->
+                <div class="middle-pane">
+                    <div class="chat-container">
+                        <div class="chat-header">
+                            <h1>AI Assistant</h1>
+                            <div class="header-buttons">
+                                <button id="testApiBtn" class="header-btn" title="Test API">
+                                    <span>Test</span>
+                                </button>
+                                <button id="clearBtn" class="clear-btn" title="Clear Chat">
+                                    <span>🗑️</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="chatMessages" class="chat-messages"></div>
+                        <div class="chat-input-container">
+                            <textarea id="messageInput" class="chat-input" placeholder="Type your message here..." rows="1"></textarea>
+                            <button id="sendBtn" class="send-btn">Send</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Pane: Score Display -->
+                <div class="score-pane">
+                    <div class="score-container">
+                        <div class="section-header">
+                            <h2>Human Effort Score</h2>
+                        </div>
+                        <div class="score-content">
+                            <div class="score-section">
+                                <h3>Interaction Metrics</h3>
+                                <div class="score-item">
+                                    <span class="score-label">Situation Scrolls</span>
+                                    <span class="score-value" id="situationScrollCount">0</span>
+                                </div>
+                                <div class="score-item">
+                                    <span class="score-label">Chat Scrolls</span>
+                                    <span class="score-value" id="chatScrollCount">0</span>
+                                </div>
+                                <div class="score-item">
+                                    <span class="score-label">Response Typing</span>
+                                    <span class="score-value" id="responseTypingCount">0</span>
+                                </div>
+                                <div class="score-item">
+                                    <span class="score-label">Chat Typing</span>
+                                    <span class="score-value" id="chatTypingCount">0</span>
+                                </div>
+                                <div class="score-item">
+                                    <span class="score-label">AI Prompts</span>
+                                    <span class="score-value" id="aiPromptCount">0</span>
+                                </div>
+                                <div class="score-item">
+                                    <span class="score-label">AI Feedback</span>
+                                    <span class="score-value" id="aiFeedbackCount">0</span>
+                                </div>
+                            </div>
+                            <div class="score-section">
+                                <h3>Quality Metrics</h3>
+                                <div class="score-item">
+                                    <span class="score-label">Draft Similarity</span>
+                                    <span class="score-value" id="draftSimilarity">0%</span>
+                                </div>
+                                <div class="score-item">
+                                    <span class="score-label">Time on Page</span>
+                                    <span class="score-value" id="timeOnPage">0s</span>
+                                </div>
+                            </div>
+                            <div class="score-section">
+                                <div class="score-item total-score">
+                                    <span class="score-label">Total HES Score</span>
+                                    <span class="score-value" id="hesScore">0</span>
+                                </div>
+                                <div class="score-item">
+                                    <span class="score-label">Total Count</span>
+                                    <span class="score-value" id="totalCount">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Check if user has consented (has userID)
+        const storedUserID = localStorage.getItem('userID');
+        if (!storedUserID) {
+            // User hasn't gone through consent, redirect to index
+            window.location.href = 'index.html';
+        }
+        
+        // Initialize main interface when page loads
+        window.addEventListener('load', () => {
+            // Make sure main screen is visible
+            const mainScreen = document.getElementById('mainScreen');
+            if (mainScreen) {
+                mainScreen.classList.add('active');
+                document.body.classList.remove('has-screen-active');
+            }
+            
+            // Wait a bit for script.js to fully load and initialize
+            setTimeout(() => {
+                // Initialize the main UI (load advice post, start tracking, etc.)
+                if (typeof initializeMainUI === 'function') {
+                    initializeMainUI();
+                } else {
+                    console.error('initializeMainUI function not found');
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>

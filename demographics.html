@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demographics - Final Step</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="screen active">
+        <div class="screen-container">
+            <div class="screen-content survey-content">
+                <h1>Demographics</h1>
+                <p class="survey-instructions">Please provide the following demographic information. This is the final step before submitting your response.</p>
+                <form id="demographicsForm">
+                    <div class="form-section">
+                        <div class="form-group">
+                            <label class="survey-item-label">Age Group</label>
+                            <select name="ageGroup" class="text-input" required>
+                                <option value="">Select age group</option>
+                                <option value="18-24">18-24</option>
+                                <option value="25-34">25-34</option>
+                                <option value="35-44">35-44</option>
+                                <option value="45-54">45-54</option>
+                                <option value="55-64">55-64</option>
+                                <option value="65+">65+</option>
+                                <option value="prefer-not-to-say">Prefer not to say</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="survey-item-label">Gender</label>
+                            <select name="gender" class="text-input" required>
+                                <option value="">Select gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="non-binary">Non-binary</option>
+                                <option value="prefer-not-to-say">Prefer not to say</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" id="submitDemographicsBtn" class="primary-btn">Submit Response</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const demographicsForm = document.getElementById('demographicsForm');
+        const submitDemographicsBtn = document.getElementById('submitDemographicsBtn');
+        
+        // Check if user came from survey2
+        const surveyData = localStorage.getItem('surveyData');
+        if (!surveyData) {
+            window.location.href = 'survey1.html';
+        }
+        
+        // Helper function to download JSON
+        function downloadJSON(data, filename) {
+            const jsonStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+        
+        // Email submission via API
+        async function emailSubmission(jsonData) {
+            try {
+                const response = await fetch('/api/send-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ submissionData: jsonData })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    return { success: true, message: result.message || 'Email sent successfully' };
+                } else {
+                    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+                    return { success: false, message: errorData.message || 'Failed to send email' };
+                }
+            } catch (error) {
+                return { success: false, message: error.message || 'Network error while sending email' };
+            }
+        }
+        
+        demographicsForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Collect demographics data
+            const formData = new FormData(demographicsForm);
+            const demographicsData = {
+                ageGroup: formData.get('ageGroup'),
+                gender: formData.get('gender')
+            };
+            
+            // Get all stored data
+            const surveyData = JSON.parse(localStorage.getItem('surveyData') || '{}');
+            const pendingSubmissionDataStr = localStorage.getItem('pendingSubmissionData');
+            
+            if (!pendingSubmissionDataStr) {
+                alert('Error: Submission data not found. Please return to the main page and try again.');
+                window.location.href = 'main.html';
+                return;
+            }
+            
+            const pendingSubmissionData = JSON.parse(pendingSubmissionDataStr);
+            const userID = localStorage.getItem('userID');
+            const isTestMode = localStorage.getItem('isTestMode') === 'true';
+            
+            // Combine all data
+            const completeSubmissionData = {
+                ...pendingSubmissionData,
+                surveyData: {
+                    survey1: surveyData.survey1,
+                    survey2: surveyData.survey2,
+                    demographics: demographicsData
+                },
+                userID: userID,
+                isTestMode: isTestMode
+            };
+            
+            // Disable submit button
+            submitDemographicsBtn.disabled = true;
+            submitDemographicsBtn.innerHTML = '<span>Submitting...</span>';
+            
+            // Create filename with timestamp
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            const filename = `advice-response-submission-${userID}-${timestamp}.json`;
+            
+            // Download JSON file
+            downloadJSON(completeSubmissionData, filename);
+            
+            // Try to send email
+            const emailResult = await emailSubmission(completeSubmissionData);
+            
+            if (emailResult.success) {
+                alert('✅ Submission complete! Email sent and JSON file downloaded.\n\nThank you for participating!');
+                // Clear localStorage
+                localStorage.removeItem('pendingSubmissionData');
+                localStorage.removeItem('surveyData');
+                // Redirect to index
+                window.location.href = 'index.html';
+            } else {
+                // Email failed, but file was downloaded
+                alert(`⚠️ JSON file downloaded, but email failed: ${emailResult.message}\n\nYour data has been saved locally. Please contact the research team if needed.`);
+                // Clear localStorage
+                localStorage.removeItem('pendingSubmissionData');
+                localStorage.removeItem('surveyData');
+                // Redirect to index
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>
+
