@@ -555,15 +555,16 @@
                 console.log(`Loaded eval ${currentIndex + 1}/${evalOrder.length}: ${currentEvalName}`);
                 
                 // Display the content with progress indicator
+                // HES metrics go at the top (after progress) for eval1 and eval2
                 evalContent.innerHTML = `
                     <div style="margin-bottom: 20px; padding: 12px; background: #667eea; color: white; border-radius: 8px; text-align: center; font-weight: 600; font-size: 18px;">
                         ${progressText}
                     </div>
+                    ${hesMetricsHTML}
                     <h2>Situation</h2>
                     <p>${situation.replace(/\n/g, '<br>')}</p>
                     <h3>Anonymous Author's Advice</h3>
                     <p>${advice.replace(/\n/g, '<br>')}</p>
-                    ${hesMetricsHTML}
                 `;
                 
             } catch (error) {

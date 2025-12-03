@@ -16,6 +16,7 @@ let advicePost, commentInput, commentSubmitBtn, askAiFeedbackBtn;
 // Human Effort Score tracking elements
 let situationScrollCount, chatScrollCount, responseTypingCount, chatTypingCount;
 let aiPromptCount, aiFeedbackCount, draftSimilarity, timeOnPage, hesScore, totalCount;
+let hesScoreInline; // Inline HES score in comment input area
 
 // Score tracking variables
 let scores = {
@@ -266,6 +267,19 @@ function updateScoreDisplayFast() {
     
     const total = scores.situationScroll + scores.chatScroll + scores.responseTyping + scores.chatTyping + scores.aiPrompts + scores.aiFeedback;
     if (totalCount) totalCount.textContent = total;
+    
+    // Update inline HES score by reading from main HES score display
+    if (hesScoreInline && hesScore) {
+        const hesValueElement = hesScoreInline.querySelector('.hes-score-value');
+        if (hesValueElement) {
+            // Sync from the main HES score which updates correctly
+            const mainHESValue = hesScore.textContent || '0';
+            hesValueElement.textContent = mainHESValue;
+            console.log('Updated inline HES (fast):', mainHESValue);
+        } else {
+            console.error('hesValueElement not found in updateScoreDisplayFast');
+        }
+    }
 }
 
 // Update score display with similarity calculation (expensive)
@@ -288,9 +302,25 @@ function updateScoreDisplay() {
     if (timeOnPage) timeOnPage.textContent = formatTime(scores.timeOnPageSeconds);
     
     // Calculate and display HES
+    let calculatedHES = 0;
     if (hesScore) {
-        const hes = calculateHES();
-        hesScore.textContent = hes;
+        calculatedHES = calculateHES();
+        hesScore.textContent = calculatedHES;
+    }
+    
+    // Update inline HES score in comment input area by syncing from main display
+    if (hesScoreInline && hesScore) {
+        const hesValueElement = hesScoreInline.querySelector('.hes-score-value');
+        if (hesValueElement) {
+            // Read directly from the main HES score element
+            const finalHES = hesScore.textContent || calculatedHES.toString();
+            hesValueElement.textContent = finalHES;
+            console.log('Updated inline HES (full):', finalHES, 'from main:', hesScore.textContent, 'calculated:', calculatedHES);
+        } else {
+            console.error('hesValueElement not found in updateScoreDisplay');
+        }
+    } else {
+        console.log('hesScoreInline or hesScore not available:', {hesScoreInline: !!hesScoreInline, hesScore: !!hesScore});
     }
     
     const total = scores.situationScroll + scores.chatScroll + scores.responseTyping + scores.chatTyping + scores.aiPrompts + scores.aiFeedback;
@@ -1654,17 +1684,27 @@ function initializeMainUIElements() {
     draftSimilarity = document.getElementById('draftSimilarity');
     timeOnPage = document.getElementById('timeOnPage');
     hesScore = document.getElementById('hesScore');
+    hesScoreInline = document.getElementById('hesScoreInline');
     totalCount = document.getElementById('totalCount');
     
     // Debug: log which elements were found
     console.log('Main UI elements initialized:', {
         advicePost: !!advicePost,
+        hesScore: !!hesScore,
+        hesScoreInline: !!hesScoreInline,
         chatMessages: !!chatMessages,
         messageInput: !!messageInput,
         commentInput: !!commentInput,
-        hesScore: !!hesScore,
         timeOnPage: !!timeOnPage
     });
+    
+    // Debug inline HES structure
+    if (hesScoreInline) {
+        console.log('hesScoreInline element found:', hesScoreInline);
+        console.log('hesScoreInline innerHTML:', hesScoreInline.innerHTML);
+        const valueEl = hesScoreInline.querySelector('.hes-score-value');
+        console.log('hes-score-value element:', valueEl, 'text:', valueEl ? valueEl.textContent : 'NOT FOUND');
+    }
 }
 
 // Initialize DOM elements and event listeners
