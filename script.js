@@ -1160,7 +1160,7 @@ function buildFullPrompt(systemPrompt, history) {
 
 function getInitialGreeting() {
     return currentAdvicePost 
-        ? 'Hi! I am your AI writing assistant. I can help you:<ul style="margin: 8px 0; padding-left: 24px;"><li><b>Understand the situation</b></li><li><b>Brainstorm advice ideas</b></li><li><b>Proofread your draft</b></li><li><b>Provide feedback on your language</b></li></ul>and a lot more! What do you want to do first?'
+        ? 'Hi! I am your AI writing assistant. I can help you:<ul style="margin: 8px 0; padding-left: 24px;"><li><b>Understand the situation</b></li><li><b>Brainstorm advice ideas</b></li><li><b>Proofread your draft</b></li><li><b>Provide feedback on your language</b></li></ul>and a lot more!<br><br><b>💡 Tip:</b> The system automatically filters out prompts unrelated to writing advice (like "Tell a joke"). To ensure your request is processed, explicitly state how it relates to writing your response, such as "Help me understand the situation..." or "Help me brainstorm ideas..."<br><br>What do you want to do first?'
         : 'Ready to help. Load an advice request to begin.';
 }
 
